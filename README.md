@@ -28,6 +28,8 @@ El frontend usa `VITE_API_URL` para encontrar la API. El valor de ejemplo es `ht
 
 El backend aún no se puede iniciar: `althea/althea/backend/app/main.py` está vacío y todavía no define la aplicación FastAPI ni sus endpoints. Por eso, las vistas que consultan datos de la API no tendrán funcionalidad de datos hasta implementar y ejecutar ese servicio. Las dependencias previstas están listadas en `althea/althea/backend/requirements.txt`.
 
+Las credenciales de Supabase se configuran en `althea/althea/backend/.env`, que está excluido de Git. Copia `.env.example` como referencia y completa `SUPABASE_URL` con la URL del proyecto (`https://<project-ref>.supabase.co`). La clave secreta se mantiene solo en el backend; no la pongas en variables `VITE_*` ni en el frontend. La integración aún no lee estas variables porque falta implementar el backend.
+
 Cuando se implemente el backend, se necesitará Python 3.11 o posterior. Desde la raíz del repositorio, las dependencias se instalan con:
 
 ```bash
@@ -42,7 +44,7 @@ La base de datos requiere PostgreSQL compatible con las migraciones del proyecto
 1. `althea/althea/backend/sql/001_schema_turismo.sql`
 2. `althea/althea/backend/sql/002_release1_extras.sql`
 
-Configura las credenciales de base de datos en el backend cuando se incorpore su configuración; actualmente no hay archivo `.env` ni variables de conexión implementadas. Tampoco hay todavía un comando funcional para arrancar la API.
+Configura la conexión a PostgreSQL en el backend cuando se incorpore esa integración. Tampoco hay todavía un comando funcional para arrancar la API.
 
 ## Compilar el frontend
 
