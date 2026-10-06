@@ -1,5 +1,5 @@
 // Contrato REST que debe exponer el backend (FastAPI). tipo: destinos|alojamientos|actividades|transportes
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
+const BASE = import.meta.env.VITE_API_URL || '/api'
 async function req(path, { method = 'GET', body } = {}) {
   const r = await fetch(BASE + path, {
     method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })

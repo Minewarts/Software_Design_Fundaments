@@ -1,12 +1,12 @@
 # Althea
 
-Aplicación web para consultar un catálogo de recursos turísticos, diseñar planes y ver sus fichas. El frontend está hecho con Vue 3 y Vite; la estructura del backend está preparada para FastAPI y PostgreSQL.
+Aplicación web para consultar un catálogo de recursos turísticos, diseñar planes y ver sus fichas. Incluye un frontend Vue 3/Vite y una API FastAPI conectada a Supabase.
 
 ## Requisitos
 
 - Node.js 20 o posterior y npm.
-- Python 3.11 o posterior, solo para instalar las dependencias previstas del backend.
-- PostgreSQL o un proyecto Supabase, solo cuando se implemente y conecte el backend.
+- Python 3.11 o posterior para el backend.
+- Un proyecto Supabase con las migraciones del proyecto aplicadas.
 - Git, para clonar el repositorio.
 
 ## Abrir el frontend
@@ -22,29 +22,30 @@ npm run dev -- --host 0.0.0.0
 
 Abre la dirección que Vite muestre en la terminal (normalmente `http://localhost:5173`). Para detener el servidor, pulsa `Ctrl+C` en esa terminal.
 
-El frontend usa `VITE_API_URL` para encontrar la API. El valor de ejemplo es `http://localhost:8000/api`; cambia esa variable en `althea/althea/frontend/.env` si tu API está en otra dirección. Vite lee las variables al iniciar, por lo que hay que reiniciar el servidor después de modificarlas.
+En desarrollo, el frontend usa `/api` y Vite reenvía esas solicitudes a `http://127.0.0.1:8000`, evitando problemas de `localhost` en Codespaces. Para otra API, configura `VITE_API_URL` en `althea/althea/frontend/.env` y reinicia Vite.
 
-## Estado del backend y la base de datos
+## Preparar Supabase y el backend
 
-El backend aún no se puede iniciar: `althea/althea/backend/app/main.py` está vacío y todavía no define la aplicación FastAPI ni sus endpoints. Por eso, las vistas que consultan datos de la API no tendrán funcionalidad de datos hasta implementar y ejecutar ese servicio. Las dependencias previstas están listadas en `althea/althea/backend/requirements.txt`.
+En el panel de Supabase, abre **SQL Editor** y ejecuta, en este orden, los scripts:
 
-Las credenciales de Supabase se configuran en `althea/althea/backend/.env`, que está excluido de Git. Copia `.env.example` como referencia y completa `SUPABASE_URL` con la URL del proyecto (`https://<project-ref>.supabase.co`). La clave secreta se mantiene solo en el backend; no la pongas en variables `VITE_*` ni en el frontend. La integración aún no lee estas variables porque falta implementar el backend.
+1. `althea/althea/backend/sql/001_schema_turismo.sql`
+2. `althea/althea/backend/sql/002_release1_extras.sql`
 
-Cuando se implemente el backend, se necesitará Python 3.11 o posterior. Desde la raíz del repositorio, las dependencias se instalan con:
+La API usa `SUPABASE_URL` y `SUPABASE_SECRET_KEY` desde `althea/althea/backend/.env`. El archivo está excluido de Git. No pongas la clave secreta en variables `VITE_*` ni en el frontend. Si aún no tienes el archivo local, copia `.env.example` y completa los valores.
+
+Desde la raíz del repositorio, instala y arranca el backend:
 
 ```bash
 cd althea/althea/backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+.venv/bin/uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-La base de datos requiere PostgreSQL compatible con las migraciones del proyecto. Ejecuta los scripts SQL en orden sobre la base de datos:
+La comprobación de la API está disponible en `http://localhost:8000/api/health`.
 
-1. `althea/althea/backend/sql/001_schema_turismo.sql`
-2. `althea/althea/backend/sql/002_release1_extras.sql`
-
-Configura la conexión a PostgreSQL en el backend cuando se incorpore esa integración. Tampoco hay todavía un comando funcional para arrancar la API.
+Mantén el backend ejecutándose en una terminal. En otra terminal, inicia el frontend con los comandos de la sección anterior; estará en `http://localhost:5173` y llamará a `http://localhost:8000/api` por defecto.
 
 ## Compilar el frontend
 
