@@ -1,0 +1,1 @@
+const o=t=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(t??0),s=(t=[])=>Object.entries(t.reduce((r,e)=>{var c;return(r[c=e.numero_dia]??(r[c]=[])).push(e),r},{})).sort((r,e)=>r[0]-e[0]);export{o as c,s as p};
