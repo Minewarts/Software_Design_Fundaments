@@ -22,3 +22,8 @@ td{padding:10px 8px;border-top:1px solid var(--line)}
 .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
 .item{border:1px solid var(--line);border-radius:12px;padding:12px}.item small{color:var(--sky);font-weight:700}
 .err{color:#b42318;font-size:13px}.star{background:none;color:#f5a623;padding:0 2px;font-size:20px}
+.bell{position:relative;margin-left:auto;align-self:center}.bell>button{background:#ffffff26;font-size:18px;padding:8px 12px}
+.bell b{position:absolute;top:-6px;right:-6px;background:#e5484d;color:#fff;border-radius:99px;font-size:11px;padding:1px 6px}
+.drop{position:absolute;right:0;top:46px;width:320px;background:#fff;border-radius:14px;box-shadow:0 8px 24px #0b3c6f33;padding:8px;z-index:9;max-height:360px;overflow:auto}
+.drop a{display:block;padding:10px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:13px}.drop a.nuevo{background:#e6f3fc}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}.stats div{background:#f8fafc;border-radius:12px;padding:12px}.stats b{font-size:22px;display:block}

@@ -65,7 +65,7 @@ class GenerarItinerarioInteligente:
             TipoRecurso.ACTIVIDAD: {a.id: a for a in cat.actividades},
             TipoRecurso.TRANSPORTE: {t.id: t for t in cat.transportes},
         }
-        plan = PlanTuristico(titulo=propuesta.titulo)
+        plan = PlanTuristico(titulo=propuesta.titulo, cantidad_viajeros=perfil.cantidad_viajeros)
         costo = Decimal("0")
         alojamientos_usados: set = set()
 

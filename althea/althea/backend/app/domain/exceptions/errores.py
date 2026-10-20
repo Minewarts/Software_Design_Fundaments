@@ -1,0 +1,16 @@
+from __future__ import annotations
+import math
+from dataclasses import dataclass, field
+from decimal import Decimal
+from enum import Enum
+from uuid import UUID, uuid4
+
+class DominioError(Exception):
+    """Base de errores de dominio."""
+
+
+class PerfilInvalidoError(DominioError): ...
+class RecursosInsuficientesError(DominioError): ...
+class PresupuestoExcedidoError(DominioError): ...
+class PropuestaIAInvalidaError(DominioError): ...
+class PlanNoEncontradoError(DominioError): ...

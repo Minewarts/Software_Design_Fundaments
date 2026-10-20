@@ -7,14 +7,14 @@ import { cop, porDia } from '../utils/format'
 const router = useRouter()
 const destinos = ref([]), error = ref(''), cargando = ref(false)
 const perfil = ref({ id_destino: '', duracion_dias: 5, presupuesto_max: 2500000, cantidad_viajeros: 3, tipo_viajero: 'FAMILIA', intereses: '' })
-const manual = ref({ titulo: '', items: [] }), sel = ref({ tipo: 'ALOJAMIENTO', id: '', dia: 1 }), opciones = ref([])
+const manual = ref({ titulo: '', cantidad_viajeros: 2, items: [] }), sel = ref({ tipo: 'ALOJAMIENTO', id: '', dia: 1 }), opciones = ref([])
 const ENDPOINT = { ALOJAMIENTO: 'alojamientos', ACTIVIDAD: 'actividades', TRANSPORTE: 'transportes' }
 onMounted(async () => { destinos.value = await recursos.listar('destinos'); await cargarOpciones() })
 async function cargarOpciones() { opciones.value = await recursos.listar(ENDPOINT[sel.value.tipo]); sel.value.id = '' }
 async function generar() {
   try {
     error.value = ''; cargando.value = true
-    const p = { ...perfil.value, intereses: perfil.value.intereses.split(',').map((s) => s.trim()).filter(Boolean) }
+    const p = { ...perfil.value, id_destino: perfil.value.id_destino || null, intereses: perfil.value.intereses.split(',').map((s) => s.trim()).filter(Boolean) }
     const plan = await planes.generar(p)
     router.push(`/plan/${plan.id}`)
   } catch (e) { error.value = e.message } finally { cargando.value = false }
@@ -47,6 +47,7 @@ async function guardar() {
     <h2>2. Crear plan manualmente</h2>
     <div class="row">
       <label>Título<input v-model="manual.titulo" /></label>
+      <label>Viajeros<input type="number" min="1" v-model.number="manual.cantidad_viajeros" style="width:80px" /></label>
       <label>Tipo<select v-model="sel.tipo" @change="cargarOpciones"><option v-for="t in Object.keys(ENDPOINT)" :key="t">{{ t }}</option></select></label>
       <label>Recurso<select v-model="sel.id"><option v-for="o in opciones" :key="o.id" :value="o.id">{{ o.nombre ?? o.tipo_vehiculo }}</option></select></label>
       <label>Día<input type="number" min="1" v-model.number="sel.dia" style="width:70px" /></label>
