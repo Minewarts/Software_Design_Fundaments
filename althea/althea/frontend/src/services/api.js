@@ -15,22 +15,21 @@ export const recursos = {
 }
 const qs = (o) => { const p = new URLSearchParams(Object.entries(o).filter(([, v]) => v !== '' && v != null)); return p.toString() ? `?${p}` : '' }
 export const planes = {
-  generar: (perfil) => req('/planes/generar', { method: 'POST', body: perfil }),     // HU-08
-  crear: (plan) => req('/planes', { method: 'POST', body: plan }),                    // HU-06
-  listar: (filtros = {}) => req('/planes' + qs(filtros)),                             // HU-10 / HU-11
-  obtener: (id) => req(`/planes/${id}`),                                              // HU-12
-  valoraciones: (id) => req(`/planes/${id}/valoraciones`),                            // HU-17
+  generar: (perfil) => req('/planes/generar', { method: 'POST', body: perfil }),
+  crear: (plan) => req('/planes', { method: 'POST', body: plan }),
+  listar: (filtros = {}) => req('/planes' + qs(filtros)),
+  obtener: (id) => req(`/planes/${id}`),
+  valoraciones: (id) => req(`/planes/${id}/valoraciones`),
   calificar: (id, v) => req(`/planes/${id}/valoraciones`, { method: 'POST', body: v }),
-  duplicar: (id) => req(`/planes/${id}/duplicar`, { method: 'POST' }),                // HU-14
+  duplicar: (id) => req(`/planes/${id}/duplicar`, { method: 'POST' }),
   estado: (id, estado) => req(`/planes/${id}/estado`, { method: 'PUT', body: { estado } }),
-  agregarItem: (id, it) => req(`/planes/${id}/items`, { method: 'POST', body: it }),  // HU-09
+  agregarItem: (id, it) => req(`/planes/${id}/items`, { method: 'POST', body: it }),
   quitarItem: (id, item) => req(`/planes/${id}/items/${item}`, { method: 'DELETE' }),
   moverItem: (id, item, dia) => req(`/planes/${id}/items/${item}`, { method: 'PUT', body: { numero_dia: dia } }),
-  pdfUrl: (id) => `${BASE}/planes/${id}/pdf`,                                         // HU-13
+  pdfUrl: (id) => `${BASE}/planes/${id}/pdf`,
 }
-export const clima = { historico: (idDestino, mes) => req(`/clima/${idDestino}?mes=${mes}`) }        // HU-15
-export const traduccion = { traducir: (idioma, textos) => req('/traducir', { method: 'POST', body: { idioma, textos } }) } // HU-18
-export const notificaciones = {                                                                       // HU-16
-  listar: () => req('/notificaciones'),
-  leerTodas: () => req('/notificaciones/leer', { method: 'POST' }),
+export const clima = {
+  actual: (idDestino) => req(`/clima/actual/${idDestino}`),
+  historico: (idDestino, mes) => req(`/clima/${idDestino}?mes=${mes}`),
 }
+export const traduccion = { traducir: (idioma, textos) => req('/traducir', { method: 'POST', body: { idioma, textos } }) }

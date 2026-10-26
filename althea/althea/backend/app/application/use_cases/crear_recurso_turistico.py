@@ -1,4 +1,4 @@
-"""Caso de uso: alimentar el catálogo (HU-01..04)."""
+"""Caso de uso para crear recursos del catálogo turístico."""
 from __future__ import annotations
 
 from dataclasses import fields

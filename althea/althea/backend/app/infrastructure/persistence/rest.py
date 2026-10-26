@@ -60,7 +60,7 @@ class SupabaseRest:
 
         headers = {
             "apikey": self._secret_key,
-            "Authorization": f"Bearer {self._secret_key}",
+            "Authorization": "Bearer " + self._secret_key,
         }
         if body is not None:
             headers["Content-Type"] = "application/json"

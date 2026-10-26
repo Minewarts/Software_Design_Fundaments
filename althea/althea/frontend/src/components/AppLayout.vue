@@ -1,5 +1,4 @@
 <script setup>
-import Notificaciones from './Notificaciones.vue'
 const logo = Object.values(import.meta.glob('../assets/images/logo.*', { eager: true, import: 'default', query: '?url' }))[0]
 const otros = ['Proveedores', 'Viajes', 'Cotizaciones', 'Ventas', 'Consultas', 'Configuración'] // fuera del release 1
 </script>
@@ -13,9 +12,9 @@ const otros = ['Proveedores', 'Viajes', 'Cotizaciones', 'Ventas', 'Consultas', '
     <div>
       <nav class="tabs">
         <router-link to="/catalogo">Gestión de Catálogo</router-link>
+        <router-link to="/actividades">Consultar actividades</router-link>
         <router-link to="/disenio">Diseño de Planes</router-link>
         <router-link to="/directorio">Directorio de Planes</router-link>
-        <Notificaciones />
       </nav>
       <main><router-view /></main>
     </div>

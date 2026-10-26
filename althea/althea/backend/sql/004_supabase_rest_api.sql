@@ -48,12 +48,6 @@ LEFT JOIN LATERAL (
     WHERE v.id_plan = p.id
 ) valoracion ON true;
 
-CREATE OR REPLACE VIEW public.notificaciones_detalle
-WITH (security_invoker = true) AS
-SELECT n.id, n.id_plan, p.titulo, n.mensaje, n.leida, n.created_at
-FROM public.notificacion n
-JOIN public.plan_turistico p ON p.id = n.id_plan;
-
 CREATE OR REPLACE FUNCTION public.crear_plan_con_items(p_plan jsonb, p_items jsonb)
 RETURNS uuid
 LANGUAGE plpgsql
@@ -247,10 +241,10 @@ GRANT USAGE ON SCHEMA public TO service_role;
 GRANT SELECT, INSERT, UPDATE, DELETE ON
     public.destino, public.alojamiento, public.actividad, public.transporte,
     public.plan_turistico, public.item_itinerario, public.destino_transporte,
-    public.valoracion, public.notificacion
+    public.valoracion
 TO service_role;
 GRANT SELECT ON
-    public.plan_items_detalle, public.plan_directorio, public.notificaciones_detalle
+    public.plan_items_detalle, public.plan_directorio
 TO service_role;
 GRANT EXECUTE ON FUNCTION public.crear_plan_con_items(jsonb, jsonb),
     public.duplicar_plan(uuid),

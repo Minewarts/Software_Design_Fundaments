@@ -1,12 +1,22 @@
 <script setup>
-// CRUD genérico de recursos del catálogo (HU-01, 02, 03, 04, 05).
+// CRUD genérico de recursos del catálogo.
 import { ref, watch, onMounted } from 'vue'
 import { recursos } from '../services/api'
+import SearchableSelect from './SearchableSelect.vue'
 const props = defineProps({ tipo: String, campos: Array })
-const items = ref([]), destinos = ref([]), form = ref({}), editId = ref(null), error = ref('')
+const items = ref([]), destinos = ref([]), form = ref({}), editId = ref(null), error = ref(''), cargando = ref(false)
 async function cargar() {
-  items.value = await recursos.listar(props.tipo)
-  if (props.campos.some((c) => c.type.startsWith('destino'))) destinos.value = await recursos.listar('destinos')
+  try {
+    cargando.value = true
+    error.value = ''
+    items.value = await recursos.listar(props.tipo)
+    if (props.campos.some((c) => c.type.startsWith('destino'))) destinos.value = await recursos.listar('destinos')
+  } catch (e) {
+    items.value = []
+    error.value = e.message
+  } finally {
+    cargando.value = false
+  }
 }
 async function guardar() {
   try {
@@ -20,22 +30,34 @@ async function eliminar(i) {
   try { await recursos.eliminar(props.tipo, i.id); await cargar() } catch (e) { error.value = e.message }
 }
 const nombres = (ids) => [].concat(ids ?? []).map((id) => destinos.value.find((d) => d.id === id)?.nombre ?? '—').join(', ')
+const opcionesDestino = () => destinos.value.map((d) => ({ value: d.id, label: d.nombre }))
 watch(() => props.tipo, () => { form.value = {}; editId.value = null; cargar() })
 onMounted(cargar)
 </script>
 <template>
   <form class="row" @submit.prevent="guardar">
     <label v-for="c in campos" :key="c.key">{{ c.label }}
-      <select v-if="c.type === 'destino'" v-model="form[c.key]" required>
-        <option v-for="d in destinos" :key="d.id" :value="d.id">{{ d.nombre }}</option></select>
-      <select v-else-if="c.type === 'destinos'" v-model="form[c.key]" multiple>
-        <option v-for="d in destinos" :key="d.id" :value="d.id">{{ d.nombre }}</option></select>
+      <SearchableSelect
+        v-if="c.type === 'destino'"
+        v-model="form[c.key]"
+        :options="opcionesDestino()"
+        empty-label=""
+        placeholder="Buscar o pegar un destino…"
+      />
+      <SearchableSelect
+        v-else-if="c.type === 'destinos'"
+        v-model="form[c.key]"
+        :options="opcionesDestino()"
+        multiple
+        placeholder="Buscar o pegar destinos…"
+      />
       <input v-else v-model="form[c.key]" :type="c.type" :min="c.type === 'number' ? 0 : null" required />
     </label>
     <button>{{ editId ? 'Actualizar' : 'Agregar' }}</button>
     <button v-if="editId" type="button" class="sec" @click="form = {}; editId = null">Cancelar</button>
   </form>
-  <p class="err">{{ error }}</p>
+  <p v-if="error" class="err">{{ error }}</p>
+  <p v-else-if="cargando" class="mut">Cargando recursos…</p>
   <table>
     <tr><th v-for="c in campos" :key="c.key">{{ c.label }}</th><th></th></tr>
     <tr v-for="i in items" :key="i.id">

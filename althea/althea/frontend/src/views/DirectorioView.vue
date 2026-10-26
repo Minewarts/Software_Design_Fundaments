@@ -1,25 +1,45 @@
 <script setup>
-// HU-10 consultar planes · HU-11 filtros avanzados · HU-14 duplicar como plantilla.
+// Consulta de planes con filtros y opción para duplicar como plantilla.
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { planes } from '../services/api'
+import { planes, recursos } from '../services/api'
 import { cop } from '../utils/format'
 import StarRating from '../components/StarRating.vue'
+import SearchableSelect from '../components/SearchableSelect.vue'
 const router = useRouter()
 const VACIO = { destino: '', estado: '', precio_min: '', precio_max: '', dias_max: '' }
-const lista = ref([]), f = ref({ ...VACIO }), origen = ref(''), error = ref('')
+const lista = ref([]), destinos = ref([]), f = ref({ ...VACIO }), origen = ref(''), error = ref('')
 const cuenta = (e) => lista.value.filter((p) => p.estado === e).length
 async function buscar() { try { error.value = ''; lista.value = await planes.listar(f.value) } catch (e) { error.value = e.message } }
 function limpiar() { f.value = { ...VACIO }; buscar() }
 async function duplicar() { try { const n = await planes.duplicar(origen.value); router.push(`/plan/${n.id}`) } catch (e) { error.value = e.message } }
-onMounted(buscar)
+onMounted(async () => {
+  try {
+    destinos.value = await recursos.listar('destinos')
+    await buscar()
+  } catch (e) { error.value = e.message }
+})
 </script>
 <template>
   <section class="card">
     <h2>1. Directorio de Planes Turísticos</h2>
     <form class="row" style="margin-bottom:14px" @submit.prevent="buscar">
-      <label>Destino<input v-model="f.destino" placeholder="San Andrés" /></label>
-      <label>Estado<select v-model="f.estado"><option value="">Todos</option><option v-for="e in ['BORRADOR','APROBADO','ARCHIVADO']" :key="e">{{ e }}</option></select></label>
+      <label>Destino
+        <SearchableSelect
+          v-model="f.destino"
+          :options="destinos.map((d) => ({ value: d.nombre, label: d.nombre }))"
+          empty-label="Todos los destinos"
+          placeholder="Buscar o pegar destino…"
+        />
+      </label>
+      <label>Estado
+        <SearchableSelect
+          v-model="f.estado"
+          :options="['BORRADOR', 'APROBADO', 'ARCHIVADO'].map((e) => ({ value: e, label: e }))"
+          empty-label="Todos"
+          placeholder="Buscar estado…"
+        />
+      </label>
       <label>Precio mín.<input type="number" min="0" v-model="f.precio_min" style="width:130px" /></label>
       <label>Precio máx.<input type="number" min="0" v-model="f.precio_max" style="width:130px" /></label>
       <label>Duración máx. (días)<input type="number" min="1" v-model="f.dias_max" style="width:120px" /></label>
@@ -41,7 +61,13 @@ onMounted(buscar)
     <div class="stats"><div>Total<b>{{ lista.length }}</b></div><div>Aprobados<b>{{ cuenta('APROBADO') }}</b></div>
       <div>Borradores<b>{{ cuenta('BORRADOR') }}</b></div><div>Archivados<b>{{ cuenta('ARCHIVADO') }}</b></div></div>
     <div class="row"><label>Duplicar plan como plantilla
-      <select v-model="origen"><option v-for="p in lista" :key="p.id" :value="p.id">{{ p.titulo }}</option></select></label>
+      <SearchableSelect
+        v-model="origen"
+        :options="lista.map((p) => ({ value: p.id, label: p.titulo }))"
+        empty-label=""
+        placeholder="Buscar o pegar el nombre del plan…"
+      />
+    </label>
       <button :disabled="!origen" @click="duplicar">Duplicar plan</button></div>
   </section>
 </template>

@@ -1,16 +1,28 @@
 <script setup>
-// HU-08 perfil + IA, HU-06 plan manual.
+// Diseño de planes con generación asistida o creación manual.
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { recursos, planes } from '../services/api'
 import { cop, porDia } from '../utils/format'
+import SearchableSelect from '../components/SearchableSelect.vue'
 const router = useRouter()
 const destinos = ref([]), error = ref(''), cargando = ref(false)
-const perfil = ref({ id_destino: '', duracion_dias: 5, presupuesto_max: 2500000, cantidad_viajeros: 3, tipo_viajero: 'FAMILIA', intereses: '' })
+const perfil = ref({ id_destino: '', duracion_dias: 5, presupuesto_max: 5000000, cantidad_viajeros: 3, tipo_viajero: 'FAMILIA', intereses: '' })
 const manual = ref({ titulo: '', cantidad_viajeros: 2, items: [] }), sel = ref({ tipo: 'ALOJAMIENTO', id: '', dia: 1 }), opciones = ref([])
 const ENDPOINT = { ALOJAMIENTO: 'alojamientos', ACTIVIDAD: 'actividades', TRANSPORTE: 'transportes' }
-onMounted(async () => { destinos.value = await recursos.listar('destinos'); await cargarOpciones() })
+const opcionesDestino = () => destinos.value.map((d) => ({ value: d.id, label: d.nombre }))
+const opcionesRecurso = () => opciones.value.map((o) => ({ value: o.id, label: o.nombre ?? o.tipo_vehiculo }))
+onMounted(async () => {
+  try {
+    destinos.value = await recursos.listar('destinos')
+    await cargarOpciones()
+  } catch (e) { error.value = e.message }
+})
 async function cargarOpciones() { opciones.value = await recursos.listar(ENDPOINT[sel.value.tipo]); sel.value.id = '' }
+async function cambiarTipo(tipo) {
+  sel.value.tipo = tipo
+  try { await cargarOpciones() } catch (e) { error.value = e.message }
+}
 async function generar() {
   try {
     error.value = ''; cargando.value = true
@@ -31,13 +43,20 @@ async function guardar() {
   <section class="card">
     <h2>1. Perfil del Viajero</h2>
     <form class="row" @submit.prevent="generar">
-      <label>Destino<select v-model="perfil.id_destino"><option value="">Cualquiera</option>
-        <option v-for="d in destinos" :key="d.id" :value="d.id">{{ d.nombre }}</option></select></label>
+      <label>Destino
+        <SearchableSelect v-model="perfil.id_destino" :options="opcionesDestino()" empty-label="Cualquiera" placeholder="Buscar o pegar destino…" />
+      </label>
       <label>Duración (días)<input type="number" min="1" v-model.number="perfil.duracion_dias" /></label>
       <label>Presupuesto (COP)<input type="number" min="1" v-model.number="perfil.presupuesto_max" /></label>
       <label>Viajeros<input type="number" min="1" v-model.number="perfil.cantidad_viajeros" /></label>
-      <label>Tipo de viajero<select v-model="perfil.tipo_viajero">
-        <option v-for="t in ['SOLO','PAREJA','FAMILIA','AMIGOS','CORPORATIVO']" :key="t">{{ t }}</option></select></label>
+      <label>Tipo de viajero
+        <SearchableSelect
+          v-model="perfil.tipo_viajero"
+          :options="['SOLO','PAREJA','FAMILIA','AMIGOS','CORPORATIVO'].map((t) => ({ value: t, label: t }))"
+          empty-label=""
+          placeholder="Buscar tipo de viajero…"
+        />
+      </label>
       <label>Intereses (separados por coma)<input v-model="perfil.intereses" placeholder="Buceo, Gastronomía" /></label>
       <button class="big">{{ cargando ? 'Generando…' : '⚡ Generar Plan con IA' }}</button>
     </form>
@@ -48,8 +67,18 @@ async function guardar() {
     <div class="row">
       <label>Título<input v-model="manual.titulo" /></label>
       <label>Viajeros<input type="number" min="1" v-model.number="manual.cantidad_viajeros" style="width:80px" /></label>
-      <label>Tipo<select v-model="sel.tipo" @change="cargarOpciones"><option v-for="t in Object.keys(ENDPOINT)" :key="t">{{ t }}</option></select></label>
-      <label>Recurso<select v-model="sel.id"><option v-for="o in opciones" :key="o.id" :value="o.id">{{ o.nombre ?? o.tipo_vehiculo }}</option></select></label>
+      <label>Tipo
+        <SearchableSelect
+          v-model="sel.tipo"
+          :options="Object.keys(ENDPOINT).map((t) => ({ value: t, label: t }))"
+          empty-label=""
+          placeholder="Buscar tipo…"
+          @update:model-value="cambiarTipo"
+        />
+      </label>
+      <label>Recurso
+        <SearchableSelect v-model="sel.id" :options="opcionesRecurso()" empty-label="" placeholder="Buscar o pegar recurso…" />
+      </label>
       <label>Día<input type="number" min="1" v-model.number="sel.dia" style="width:70px" /></label>
       <button class="sec" @click="agregar">Agregar</button>
     </div>

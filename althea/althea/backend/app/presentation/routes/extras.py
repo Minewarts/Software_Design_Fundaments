@@ -9,22 +9,16 @@ from app.presentation.schemas.schemas import TraducirIn
 router = APIRouter()
 
 
-@router.get("/clima/{id_destino}")                          # HU-15
+@router.get("/clima/{id_destino}")
 def clima(id_destino: UUID, mes: int = Query(date.today().month, ge=1, le=12)):
     return D.clima.ejecutar(id_destino, mes)
 
 
-@router.post("/traducir")                                   # HU-18
+@router.get("/clima/actual/{id_destino}")
+def clima_actual(id_destino: UUID):
+    return D.clima.actual(id_destino)
+
+
+@router.post("/traducir")
 def traducir(b: TraducirIn):
     return D.traducir.ejecutar(b.textos, b.idioma)
-
-
-@router.get("/notificaciones")                              # HU-16
-def notificaciones():
-    return D.gestionar.notificaciones()
-
-
-@router.post("/notificaciones/leer")
-def leer():
-    D.gestionar.marcar_leidas()
-    return {"ok": True}

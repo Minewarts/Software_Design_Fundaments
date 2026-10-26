@@ -16,6 +16,12 @@ Desde el **SQL Editor** del proyecto, ejecuta en este orden:
 2. `backend/sql/002_release1_extras.sql`
 3. `backend/sql/003_release2.sql`
 4. `backend/sql/004_supabase_rest_api.sql`
+5. `backend/sql/005_remove_notifications.sql`
+
+Para poblar el catálogo con destinos, alojamientos, actividades y transportes
+de demostración, ejecuta también `backend/sql/006_datos_ejemplo.sql`. Sus
+registros se pueden insertar más de una vez sin duplicar los mismos ejemplos;
+los precios son ilustrativos y están expresados en pesos colombianos.
 
 ## Backend (FastAPI)
 En PowerShell, desde `althea/althea`:
@@ -29,9 +35,10 @@ Copy-Item .env.example .env
 ```
 
 Edita `backend/.env` y pega una clave secreta vigente en `SUPABASE_SECRET_KEY`.
-`SUPABASE_URL` ya está configurada en el ejemplo. `ANTHROPIC_API_KEY` es
-opcional para iniciar la app, pero se necesita para generar itinerarios y
-traducir fichas.
+Confirma que `SUPABASE_URL` apunte a tu proyecto. `GEMINI_API_KEY` es opcional
+para iniciar la app, pero se necesita para generar itinerarios y traducir
+fichas. El modelo predeterminado es `gemini-3.5-flash`; puedes cambiarlo con
+`GEMINI_MODEL` si tu clave tiene acceso a otro modelo.
 
 Inicia el backend desde `backend/`:
 
@@ -52,6 +59,12 @@ npm run dev
 
 Abre http://localhost:5173. El frontend usa `http://localhost:8000/api` por
 defecto; si cambias el backend, define `VITE_API_URL` en `frontend/.env`.
+
+La navegación permite consultar actividades por destino, nombre y tipo. El
+clima actual del destino se consulta automáticamente desde Open-Meteo al abrir
+la ficha de un plan; no es necesario introducir un mes ni un clima promedio.
+Al crear o cambiar la ubicación de un destino, el catálogo también obtiene
+automáticamente la temperatura actual para completar el campo heredado de clima.
 
 ## Tests
 Desde `backend/`:

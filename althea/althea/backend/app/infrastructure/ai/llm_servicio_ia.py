@@ -1,4 +1,4 @@
-"""Adaptador ServicioIA: itinerario (HU-08) y Traductor (HU-18) sobre Claude."""
+"""Adaptadores de generación de itinerarios y traducción sobre Gemini."""
 from __future__ import annotations
 
 import json
@@ -9,7 +9,7 @@ from app.application.ports.traductor import Traductor
 from app.domain.entities.enums import TipoRecurso
 from app.domain.entities.perfil_viaje import PerfilViaje
 from app.domain.exceptions.errores import PropuestaIAInvalidaError
-from app.infrastructure.ai.claude_client import ClaudeClient
+from app.infrastructure.ai.gemini_client import GeminiClient
 
 SYSTEM = """Eres un diseñador de itinerarios turísticos para una agencia de viajes.
 Recibes un perfil de viaje y un catálogo cerrado de recursos. Responde SOLO con JSON:
@@ -19,7 +19,7 @@ reparte las actividades según los intereses y el tipo de viajero; 1-3 ítems po
 
 
 class LLMServicioIA(ServicioIA):
-    def __init__(self, cliente: ClaudeClient) -> None:
+    def __init__(self, cliente: GeminiClient) -> None:
         self._c = cliente
 
     def generar_itinerario(self, perfil: PerfilViaje, cat: CatalogoCandidato) -> PropuestaIA:
@@ -42,8 +42,8 @@ class LLMServicioIA(ServicioIA):
             raise PropuestaIAInvalidaError(f"Propuesta de IA mal formada: {e}") from e
 
 
-class ClaudeTraductor(Traductor):
-    def __init__(self, cliente: ClaudeClient) -> None:
+class GeminiTraductor(Traductor):
+    def __init__(self, cliente: GeminiClient) -> None:
         self._c = cliente
 
     def traducir(self, textos: dict[str, str], idioma: str) -> dict[str, str]:

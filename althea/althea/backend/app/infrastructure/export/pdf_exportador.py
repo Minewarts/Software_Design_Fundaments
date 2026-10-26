@@ -1,4 +1,4 @@
-"""Adaptador ExportadorPlan (HU-13) con ReportLab."""
+"""Adaptador de exportación de fichas a PDF con ReportLab."""
 from __future__ import annotations
 
 import io

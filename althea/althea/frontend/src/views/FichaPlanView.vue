@@ -1,18 +1,27 @@
 <script setup>
-// HU-12 ficha · HU-09 personalizar · HU-13 PDF · HU-14 duplicar · HU-15 clima · HU-17 valoraciones · HU-18 traducir
+// Detalle de plan, edición del itinerario, clima, valoraciones y traducción.
 import { ref, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { planes, clima, traduccion } from '../services/api'
-import { cop, porDia, MESES, IDIOMAS } from '../utils/format'
+import { cop, porDia, IDIOMAS } from '../utils/format'
 import StarRating from '../components/StarRating.vue'
 import AgregarItem from '../components/AgregarItem.vue'
+import SearchableSelect from '../components/SearchableSelect.vue'
 const props = defineProps({ id: String })
 const router = useRouter()
 const plan = ref(null), vals = ref([]), error = ref(''), editando = ref(false)
 const nueva = ref({ autor: '', puntuacion: 0, comentario: '' })
-const tr = ref(null), idioma = ref(IDIOMAS[0]), mes = ref(new Date().getMonth() + 1), meteo = ref(null)
+const tr = ref(null), idioma = ref(IDIOMAS[0]), meteo = ref(null)
 const t = (k, fallback) => tr.value?.[k] ?? fallback
-async function cargar() { [plan.value, vals.value] = await Promise.all([planes.obtener(props.id), planes.valoraciones(props.id)]) }
+async function cargar() {
+  try {
+    error.value = ''
+    const [planData, ratings] = await Promise.all([planes.obtener(props.id), planes.valoraciones(props.id)])
+    plan.value = planData
+    vals.value = ratings
+    meteo.value = plan.value.id_destino ? await clima.actual(plan.value.id_destino) : null
+  } catch (e) { error.value = e.message }
+}
 async function run(fn) { try { error.value = ''; await fn(); await cargar() } catch (e) { error.value = e.message } }
 const cambiarEstado = (e) => run(() => planes.estado(props.id, e))
 const agregar = (it) => run(() => planes.agregarItem(props.id, it))
@@ -27,9 +36,8 @@ async function traducir() {
       costo: 'Costo estimado', viajeros: 'Viajeros', valoraciones: 'Valoraciones', ALOJAMIENTO: 'Alojamiento', ACTIVIDAD: 'Actividad', TRANSPORTE: 'Transporte' })
   } catch (e) { error.value = e.message }
 }
-async function verClima() { try { error.value = ''; meteo.value = await clima.historico(plan.value.id_destino, mes.value) } catch (e) { error.value = e.message } }
 const promedio = () => (vals.value.reduce((s, v) => s + v.puntuacion, 0) / (vals.value.length || 1)).toFixed(1)
-watch(() => props.id, () => { tr.value = meteo.value = null; editando.value = false; cargar() })
+watch(() => props.id, () => { tr.value = meteo.value = null; plan.value = null; editando.value = false; cargar() })
 onMounted(cargar)
 </script>
 <template>
@@ -47,7 +55,14 @@ onMounted(cargar)
         <button v-else class="sec" @click="cambiarEstado('ARCHIVADO')">Archivar</button>
       </div>
       <div class="row" style="margin-bottom:10px">
-        <label>Idioma<select v-model="idioma"><option v-for="i in IDIOMAS" :key="i">{{ i }}</option></select></label>
+        <label>Idioma
+          <SearchableSelect
+            v-model="idioma"
+            :options="IDIOMAS.map((i) => ({ value: i, label: i }))"
+            empty-label=""
+            placeholder="Buscar idioma…"
+          />
+        </label>
         <button class="sec" @click="traducir">Traducir ficha</button><button v-if="tr" class="sec" @click="tr = null">Ver original</button>
       </div>
       <p class="err">{{ error }}</p>
@@ -58,11 +73,12 @@ onMounted(cargar)
             <button class="sec" @click="quitar(i)">Quitar</button></template></div></div></div>
     </section>
     <section v-if="plan.id_destino" class="card">
-      <h2>Clima histórico · {{ plan.destino }}</h2>
-      <div class="row"><label>Mes<select v-model.number="mes"><option v-for="(m, k) in MESES" :key="m" :value="k + 1">{{ m }}</option></select></label>
-        <button class="sec" @click="verClima">Consultar</button></div>
-      <p v-if="meteo" style="margin-top:12px">☀ Máx. promedio <b>{{ meteo.temp_max }}°C</b> · Mín. <b>{{ meteo.temp_min }}°C</b> ·
-        🌧 {{ meteo.lluvia_mm }} mm en {{ meteo.dias_lluvia }} días <span class="mut">(datos de {{ MESES[meteo.mes - 1] }} {{ meteo.anio }})</span></p>
+      <h2>Clima actual · {{ meteo?.lugar ?? plan.destino }}</h2>
+      <p v-if="meteo" style="margin-top:12px">
+        <b>{{ meteo.estado }}</b> · Temperatura <b>{{ meteo.temperatura }}°C</b> · Sensación térmica <b>{{ meteo.sensacion_termica }}°C</b> ·
+        Humedad <b>{{ meteo.humedad }}%</b> · Precipitación <b>{{ meteo.precipitacion }} mm</b> · Viento <b>{{ meteo.viento }} km/h</b>
+        <span class="mut">(actualizado {{ meteo.actualizado }}, vía Open-Meteo)</span>
+      </p>
     </section>
     <section class="card">
       <h2>{{ t('valoraciones', 'Valoraciones') }} <span class="mut">· {{ promedio() }} ★ ({{ vals.length }})</span></h2>

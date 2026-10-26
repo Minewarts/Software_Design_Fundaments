@@ -1,4 +1,4 @@
-"""Caso de uso HU-13: exportar la ficha del plan a PDF."""
+"""Caso de uso para exportar la ficha del plan a PDF."""
 from uuid import UUID
 
 from app.application.ports.exportador_plan import ExportadorPlan

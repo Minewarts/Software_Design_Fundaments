@@ -9,7 +9,7 @@ from app.presentation.schemas.schemas import (EstadoIn, ItemIn, MoverIn, PerfilI
 router = APIRouter()
 
 
-@router.post("/planes/generar", status_code=201)            # HU-08
+@router.post("/planes/generar", status_code=201)
 def generar_plan(p: PerfilIn):
     perfil = PerfilViaje(p.presupuesto_max, p.duracion_dias, p.cantidad_viajeros, p.tipo_viajero,
                          tuple(p.intereses), p.id_destino)
@@ -17,25 +17,25 @@ def generar_plan(p: PerfilIn):
     return {"id": plan.id, "titulo": plan.titulo, "costo_estimado": plan.costo_estimado}
 
 
-@router.post("/planes", status_code=201)                    # HU-06
+@router.post("/planes", status_code=201)
 def crear_plan(p: PlanManualIn):
     items = [(i.numero_dia, i.tipo_recurso, i.id_recurso) for i in p.items]
     return {"id": D.gestionar.crear_manual(p.titulo, p.cantidad_viajeros, items)}
 
 
-@router.get("/planes")                                      # HU-10 / HU-11
+@router.get("/planes")
 def listar(destino: str | None = None, estado: str | None = None, precio_min: float | None = None,
            precio_max: float | None = None, dias_max: int | None = None):
     return D.gestionar.listar(dict(destino=destino, estado=estado, precio_min=precio_min,
                                    precio_max=precio_max, dias_max=dias_max))
 
 
-@router.get("/planes/{id_plan}")                            # HU-12
+@router.get("/planes/{id_plan}")
 def ficha(id_plan: UUID):
     return D.gestionar.ficha(id_plan)
 
 
-@router.post("/planes/{id_plan}/duplicar", status_code=201)  # HU-14
+@router.post("/planes/{id_plan}/duplicar", status_code=201)
 def duplicar(id_plan: UUID):
     return {"id": D.gestionar.duplicar(id_plan)}
 
@@ -46,7 +46,7 @@ def estado(id_plan: UUID, b: EstadoIn):
     return {"ok": True}
 
 
-@router.post("/planes/{id_plan}/items", status_code=201)    # HU-09
+@router.post("/planes/{id_plan}/items", status_code=201)
 def agregar_item(id_plan: UUID, b: ItemIn):
     D.gestionar.agregar_item(id_plan, b.numero_dia, b.tipo_recurso, b.id_recurso)
     return {"ok": True}
@@ -63,13 +63,13 @@ def quitar_item(id_plan: UUID, id_item: UUID):
     D.gestionar.quitar_item(id_plan, id_item)
 
 
-@router.get("/planes/{id_plan}/pdf")                        # HU-13
+@router.get("/planes/{id_plan}/pdf")
 def pdf(id_plan: UUID):
     return Response(D.exportar.ejecutar(id_plan), media_type="application/pdf",
                     headers={"Content-Disposition": f'inline; filename="plan-{id_plan}.pdf"'})
 
 
-@router.get("/planes/{id_plan}/valoraciones")               # HU-17
+@router.get("/planes/{id_plan}/valoraciones")
 def valoraciones(id_plan: UUID):
     return D.gestionar.valoraciones(id_plan)
 

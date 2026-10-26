@@ -30,6 +30,10 @@ En el panel de Supabase, abre **SQL Editor** y ejecuta, en este orden, los scrip
 
 1. `althea/althea/backend/sql/001_schema_turismo.sql`
 2. `althea/althea/backend/sql/002_release1_extras.sql`
+3. `althea/althea/backend/sql/003_release2.sql`
+4. `althea/althea/backend/sql/004_supabase_rest_api.sql`
+5. `althea/althea/backend/sql/005_remove_notifications.sql`
+6. Opcionalmente, `althea/althea/backend/sql/006_datos_ejemplo.sql` para insertar destinos y recursos de demostración.
 
 La API usa `SUPABASE_URL` y `SUPABASE_SECRET_KEY` desde `althea/althea/backend/.env`. El archivo está excluido de Git. No pongas la clave secreta en variables `VITE_*` ni en el frontend. Si aún no tienes el archivo local, copia `.env.example` y completa los valores.
 

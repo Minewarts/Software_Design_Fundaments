@@ -7,7 +7,7 @@ from app.application.use_cases.generar_itinerario_inteligente import GenerarItin
 from app.domain.entities.enums import TipoRecurso, TipoViajero
 from app.domain.entities.perfil_viaje import PerfilViaje
 from app.domain.entities.recursos import Actividad, Alojamiento
-from app.domain.exceptions.errores import PropuestaIAInvalidaError
+from app.domain.exceptions.errores import PropuestaIAInvalidaError, RecursosInsuficientesError
 from uuid import uuid4
 
 DEST = uuid4()
@@ -43,3 +43,14 @@ def test_rechaza_recurso_inventado_por_la_ia():
     ia = FakeIA([ItemPropuesto(1, TipoRecurso.ALOJAMIENTO, uuid4())])
     with pytest.raises(PropuestaIAInvalidaError):
         GenerarItinerarioInteligente(FakeRecursos(), FakePlanes(), ia).ejecutar(PERFIL)
+
+
+def test_explains_when_budget_filters_out_available_resources():
+    class SinRecursosDentroDelPresupuesto(FakeRecursos):
+        def buscar_alojamientos(self, *a): return []
+
+    ia = FakeIA([])
+    caso = GenerarItinerarioInteligente(SinRecursosDentroDelPresupuesto(), FakePlanes(), ia)
+
+    with pytest.raises(RecursosInsuficientesError, match="Aumenta el presupuesto"):
+        caso.ejecutar(PERFIL)

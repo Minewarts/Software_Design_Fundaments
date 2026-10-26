@@ -26,11 +26,11 @@ class PlanRepository(ABC):
     def ficha(self, id_plan: UUID) -> dict | None:
         """Plan con ítems y nombres de recurso resueltos (vistas, PDF, traducción)."""
     @abstractmethod
-    def listar(self, filtros: dict) -> list[dict]: ...                       # HU-10 / HU-11
+    def listar(self, filtros: dict) -> list[dict]: ...
     @abstractmethod
-    def duplicar(self, id_plan: UUID) -> UUID: ...                           # HU-14
+    def duplicar(self, id_plan: UUID) -> UUID: ...
     @abstractmethod
-    def agregar_item(self, id_plan: UUID, numero_dia: int, tipo, id_recurso: UUID) -> None: ...  # HU-09
+    def agregar_item(self, id_plan: UUID, numero_dia: int, tipo, id_recurso: UUID) -> None: ...
     @abstractmethod
     def quitar_item(self, id_plan: UUID, id_item: UUID) -> None: ...
     @abstractmethod
@@ -40,14 +40,6 @@ class PlanRepository(ABC):
     @abstractmethod
     def recalcular_costo(self, id_plan: UUID) -> None: ...
     @abstractmethod
-    def valoraciones(self, id_plan: UUID) -> list[dict]: ...                 # HU-17
+    def valoraciones(self, id_plan: UUID) -> list[dict]: ...
     @abstractmethod
     def calificar(self, id_plan: UUID, autor: str, puntuacion: int, comentario: str) -> None: ...
-    @abstractmethod
-    def notificar(self, id_plan: UUID, mensaje: str) -> None: ...            # HU-16
-    @abstractmethod
-    def notificaciones(self) -> list[dict]: ...
-    @abstractmethod
-    def marcar_leidas(self) -> None: ...
-
-

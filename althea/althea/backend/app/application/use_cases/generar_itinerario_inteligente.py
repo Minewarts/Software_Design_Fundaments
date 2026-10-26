@@ -54,7 +54,8 @@ class GenerarItinerarioInteligente:
 
         if not alojamientos or not actividades:
             raise RecursosInsuficientesError(
-                "No hay alojamientos/actividades que encajen con el perfil")
+                "No hay alojamientos o actividades dentro del presupuesto por día y viajero. "
+                "Aumenta el presupuesto o reduce la duración o la cantidad de viajeros.")
         return CatalogoCandidato(alojamientos, actividades, transportes)
 
     # ── 2. Validar propuesta de la IA y armar el plan ──

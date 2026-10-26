@@ -1,4 +1,4 @@
-"""HU-15 clima histórico y HU-18 traducción de la ficha."""
+"""Casos de uso para consultar el clima y traducir fichas."""
 from uuid import UUID
 
 from app.application.ports.recurso_repository import RecursoRepository
@@ -16,6 +16,17 @@ class ConsultarClimaHistorico:
         if not destinos:
             raise DominioError("Destino no encontrado")
         return self._c.historico_mensual(destinos[0].nombre, mes)
+
+    def actual(self, id_destino: UUID) -> dict:
+        destinos = self._r.buscar_destinos(id_destino)
+        if not destinos:
+            raise DominioError("Destino no encontrado")
+        return self._c.actual(f"{destinos[0].nombre}, {destinos[0].ubicacion}")
+
+    def actual_por_ubicacion(self, ubicacion: str) -> dict:
+        if not ubicacion.strip():
+            raise DominioError("La ubicación es obligatoria para consultar el clima")
+        return self._c.actual(ubicacion)
 
 
 class TraducirTextos:

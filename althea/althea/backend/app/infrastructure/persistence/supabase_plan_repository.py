@@ -171,19 +171,3 @@ class SupabasePlanRepository(PlanRepository):
                 "comentario": comentario,
             },
         )
-
-    def notificar(self, id_plan, mensaje):
-        self._db.insert(
-            "notificacion",
-            {"id_plan": str(id_plan), "mensaje": mensaje},
-        )
-
-    def notificaciones(self):
-        return self._db.select(
-            "notificaciones_detalle",
-            order="created_at.desc",
-            limit="30",
-        )
-
-    def marcar_leidas(self):
-        self._db.update("notificacion", {"leida": "eq.false"}, {"leida": True})

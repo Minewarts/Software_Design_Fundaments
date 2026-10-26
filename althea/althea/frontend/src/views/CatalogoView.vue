@@ -3,8 +3,7 @@ import { ref, onMounted } from 'vue'
 import RecursoCrud from '../components/RecursoCrud.vue'
 import { recursos } from '../services/api'
 const CONFIG = {
-  destinos: [{ key: 'nombre', label: 'Nombre', type: 'text' }, { key: 'ubicacion', label: 'Ubicación', type: 'text' },
-             { key: 'clima_promedio', label: 'Clima promedio', type: 'text' }],
+  destinos: [{ key: 'nombre', label: 'Nombre', type: 'text' }, { key: 'ubicacion', label: 'Ubicación', type: 'text' }],
   alojamientos: [{ key: 'id_destino', label: 'Destino', type: 'destino' }, { key: 'nombre', label: 'Nombre', type: 'text' },
              { key: 'categoria_estrellas', label: 'Estrellas', type: 'number' }, { key: 'tarifa_noche', label: 'Tarifa/noche', type: 'number' }],
   actividades: [{ key: 'id_destino', label: 'Destino', type: 'destino' }, { key: 'nombre', label: 'Nombre', type: 'text' },
@@ -12,9 +11,11 @@ const CONFIG = {
   transportes: [{ key: 'tipo_vehiculo', label: 'Tipo de vehículo', type: 'text' }, { key: 'tarifa_estimada', label: 'Tarifa estimada', type: 'number' },
              { key: 'ids_destinos', label: 'Destinos que sirve', type: 'destinos' }],
 }
-const tipo = ref('destinos'), relaciones = ref([])
+const tipo = ref('destinos'), relaciones = ref([]), error = ref('')
 const lista = (xs) => (xs ?? []).map((x) => x.nombre ?? x.tipo_vehiculo).join(', ') || '—'
-onMounted(async () => { relaciones.value = await recursos.relaciones() })
+onMounted(async () => {
+  try { relaciones.value = await recursos.relaciones() } catch (e) { error.value = e.message }
+})
 </script>
 <template>
   <section class="card">
@@ -27,6 +28,7 @@ onMounted(async () => { relaciones.value = await recursos.relaciones() })
   <section class="card">
     <h2>2. Interrelación de Recursos</h2>
     <p class="mut">Catálogo único: cada destino con sus alojamientos, actividades y transportes.</p>
+    <p v-if="error" class="err">{{ error }}</p>
     <table>
       <tr><th>Destino</th><th>Alojamientos</th><th>Actividades</th><th>Transporte</th></tr>
       <tr v-for="r in relaciones" :key="r.destino"><td><b>{{ r.destino }}</b></td>

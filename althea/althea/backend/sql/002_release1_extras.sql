@@ -1,4 +1,4 @@
--- HU-05: transporte <-> destino (N:M).  HU-17: valoraciones del plan.
+--  transporte <-> destino (N:M).   valoraciones del plan.
 BEGIN;
 CREATE TABLE destino_transporte (
     id_destino    UUID NOT NULL REFERENCES destino(id)    ON DELETE CASCADE,
