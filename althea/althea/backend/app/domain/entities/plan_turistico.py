@@ -1,8 +1,6 @@
 from __future__ import annotations
-import math
 from dataclasses import dataclass, field
 from decimal import Decimal
-from enum import Enum
 from uuid import UUID, uuid4
 
 from app.domain.entities.enums import EstadoPlan, TipoRecurso
@@ -26,12 +24,16 @@ class PlanTuristico:
     items: list[ItemItinerario] = field(default_factory=list)
     cantidad_viajeros: int = 1
     id: UUID = field(default_factory=uuid4)
+    id_destino: UUID | None = None
+    duracion_dias: int = 1
+    id_destinos: tuple[UUID, ...] = ()
 
     def agregar_item(self, numero_dia: int, id_recurso: UUID,
                      tipo: TipoRecurso) -> ItemItinerario:
         orden = 1 + sum(1 for i in self.items if i.numero_dia == numero_dia)
         item = ItemItinerario(self.id, numero_dia, id_recurso, tipo, orden)
         self.items.append(item)
+        self.duracion_dias = max(self.duracion_dias, numero_dia)
         return item
 
     def validar_presupuesto(self, presupuesto_max: Decimal) -> None:

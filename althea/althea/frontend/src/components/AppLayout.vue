@@ -1,9 +1,11 @@
 <script setup>
+import ToastNotifications from './ToastNotifications.vue'
 const logo = Object.values(import.meta.glob('../assets/images/logo.*', { eager: true, import: 'default', query: '?url' }))[0]
 const otros = ['Proveedores', 'Viajes', 'Cotizaciones', 'Ventas', 'Consultas', 'Configuración'] // fuera del release 1
 </script>
 <template>
   <div class="shell">
+    <ToastNotifications />
     <aside class="side">
       <img v-if="logo" :src="logo" alt="Althea Gestión Turística" />
       <span v-for="o in otros" :key="o">{{ o }}</span>

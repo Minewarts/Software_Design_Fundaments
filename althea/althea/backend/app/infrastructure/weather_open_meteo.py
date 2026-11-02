@@ -50,12 +50,29 @@ class OpenMeteoClima(ServicioClima):
                 "latitude": location["latitude"],
                 "longitude": location["longitude"],
                 "current": "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m",
+                "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+                "forecast_days": 7,
                 "timezone": "auto",
             },
         )
         response.raise_for_status()
-        current = response.json()["current"]
+        payload = response.json()
+        current = payload["current"]
         code = current["weather_code"]
+        daily = payload["daily"]
+        today = current["time"][:10]
+        forecast = [
+            {
+                "fecha": forecast_date,
+                "estado": self._descripcion(daily["weather_code"][index]),
+                "temperatura_max": daily["temperature_2m_max"][index],
+                "temperatura_min": daily["temperature_2m_min"][index],
+                "probabilidad_precipitacion": daily["precipitation_probability_max"][index],
+                "codigo_tiempo": daily["weather_code"][index],
+            }
+            for index, forecast_date in enumerate(daily["time"])
+            if forecast_date > today
+        ][:6]
         return {
             "lugar": location["name"],
             "actualizado": current["time"],
@@ -66,6 +83,7 @@ class OpenMeteoClima(ServicioClima):
             "precipitacion": current["precipitation"],
             "viento": current["wind_speed_10m"],
             "codigo_tiempo": code,
+            "pronostico": forecast,
         }
 
     def historico_mensual(self, lugar: str, mes: int) -> dict:

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 const props = defineProps({
   modelValue: { type: [String, Number, Array], default: '' },
@@ -11,6 +11,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue'])
 const query = ref('')
 const abierto = ref(false)
+const contenedor = ref(null)
 const normalizar = (valor) => String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase()
 const filtradas = computed(() => {
   const term = normalizar(query.value.trim())
@@ -22,10 +23,18 @@ const seleccionadas = computed(() => {
   const values = props.multiple
     ? (Array.isArray(props.modelValue) ? props.modelValue : [])
     : [props.modelValue]
-  return props.options.filter((option) => values?.includes(option.value))
+  if (props.multiple) {
+    const optionsByValue = new Map(props.options.map((option) => [option.value, option]))
+    return values.map((value) => optionsByValue.get(value)).filter(Boolean)
+  }
+  return props.options.filter((option) => values.includes(option.value))
 })
 const estaSeleccionada = (value) =>
   Array.isArray(props.modelValue) && props.modelValue.includes(value)
+
+function cerrarAlHacerClickFuera(evento) {
+  if (!contenedor.value?.contains(evento.target)) abierto.value = false
+}
 
 function elegir(option) {
   if (props.multiple) {
@@ -52,10 +61,13 @@ function quitar(value) {
   const current = Array.isArray(props.modelValue) ? props.modelValue : []
   emit('update:modelValue', current.filter((item) => item !== value))
 }
+
+onMounted(() => document.addEventListener('pointerdown', cerrarAlHacerClickFuera))
+onUnmounted(() => document.removeEventListener('pointerdown', cerrarAlHacerClickFuera))
 </script>
 
 <template>
-  <div class="search-select">
+  <div ref="contenedor" class="search-select">
     <div v-if="multiple && seleccionadas.length" class="search-select__chips">
       <span v-for="option in seleccionadas" :key="option.value" class="search-select__chip">
         {{ option.label }}

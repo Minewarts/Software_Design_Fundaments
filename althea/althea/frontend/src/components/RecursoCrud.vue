@@ -35,7 +35,7 @@ watch(() => props.tipo, () => { form.value = {}; editId.value = null; cargar() }
 onMounted(cargar)
 </script>
 <template>
-  <form class="row" @submit.prevent="guardar">
+  <form class="form-grid resource-form" @submit.prevent="guardar">
     <label v-for="c in campos" :key="c.key">{{ c.label }}
       <SearchableSelect
         v-if="c.type === 'destino'"

@@ -4,15 +4,18 @@ from fastapi import APIRouter, Response
 
 from app.domain.entities.perfil_viaje import PerfilViaje
 from app.presentation import dependencies as D
-from app.presentation.schemas.schemas import (EstadoIn, ItemIn, MoverIn, PerfilIn, PlanManualIn, ValoracionIn)
+from app.presentation.schemas.schemas import (
+    EstadoIn, ItemIn, MoverIn, PerfilIn, PlanActualizarIn, PlanManualIn, ValoracionIn,
+)
 
 router = APIRouter()
 
 
 @router.post("/planes/generar", status_code=201)
 def generar_plan(p: PerfilIn):
+    ids_destinos = tuple(dict.fromkeys(p.id_destinos or ([p.id_destino] if p.id_destino else [])))
     perfil = PerfilViaje(p.presupuesto_max, p.duracion_dias, p.cantidad_viajeros, p.tipo_viajero,
-                         tuple(p.intereses), p.id_destino)
+                         tuple(p.intereses), ids_destinos[0] if ids_destinos else None, ids_destinos)
     plan = D.generar.ejecutar(perfil)
     return {"id": plan.id, "titulo": plan.titulo, "costo_estimado": plan.costo_estimado}
 
@@ -20,7 +23,11 @@ def generar_plan(p: PerfilIn):
 @router.post("/planes", status_code=201)
 def crear_plan(p: PlanManualIn):
     items = [(i.numero_dia, i.tipo_recurso, i.id_recurso) for i in p.items]
-    return {"id": D.gestionar.crear_manual(p.titulo, p.cantidad_viajeros, items)}
+    return {
+        "id": D.gestionar.crear_manual(
+            p.titulo, p.cantidad_viajeros, items, p.id_destino,
+        )
+    }
 
 
 @router.get("/planes")
@@ -33,6 +40,23 @@ def listar(destino: str | None = None, estado: str | None = None, precio_min: fl
 @router.get("/planes/{id_plan}")
 def ficha(id_plan: UUID):
     return D.gestionar.ficha(id_plan)
+
+
+@router.put("/planes/{id_plan}")
+def actualizar_plan(id_plan: UUID, b: PlanActualizarIn):
+    items = [
+        {
+            "id": item.id,
+            "numero_dia": item.numero_dia,
+            "tipo_recurso": item.tipo_recurso,
+            "id_recurso": item.id_recurso,
+        }
+        for item in b.items
+    ]
+    D.gestionar.actualizar_completo(
+        id_plan, b.titulo, b.cantidad_viajeros, b.id_destinos, items,
+    )
+    return {"ok": True}
 
 
 @router.post("/planes/{id_plan}/duplicar", status_code=201)

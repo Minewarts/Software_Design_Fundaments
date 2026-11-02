@@ -1,9 +1,8 @@
 from __future__ import annotations
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
-from enum import Enum
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from app.domain.entities.enums import TipoViajero
 from app.domain.exceptions.errores import PerfilInvalidoError
@@ -17,6 +16,7 @@ class PerfilViaje:
     tipo_viajero: TipoViajero
     intereses: tuple[str, ...] = ()
     id_destino: UUID | None = None  # Opcional: restringe el catálogo a un destino
+    id_destinos: tuple[UUID, ...] = ()
 
     def __post_init__(self) -> None:
         if self.presupuesto_max <= 0:
@@ -34,3 +34,9 @@ class PerfilViaje:
     def habitaciones(self) -> int:
         """Regla: 2 viajeros por habitación."""
         return math.ceil(self.cantidad_viajeros / 2)
+
+    @property
+    def destinos_seleccionados(self) -> tuple[UUID, ...]:
+        if self.id_destinos:
+            return tuple(dict.fromkeys(self.id_destinos))
+        return (self.id_destino,) if self.id_destino else ()

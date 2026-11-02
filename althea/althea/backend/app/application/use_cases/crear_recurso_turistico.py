@@ -29,6 +29,8 @@ class CrearRecursoTuristico:
                 d["categoria_estrellas"] = int(d["categoria_estrellas"])
             if "id_destino" in d:
                 d["id_destino"] = UUID(str(d["id_destino"]))
+            if "ids_destinos" in d:
+                d["ids_destinos"] = tuple(UUID(str(id_destino)) for id_destino in d["ids_destinos"])
             return self._r.guardar(cls(**d))
         except (TypeError, ValueError, ArithmeticError) as e:
             raise DominioError(f"Datos inválidos: {e}") from e

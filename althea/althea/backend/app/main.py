@@ -55,12 +55,37 @@ async def _external_service_error(_: Request, e: httpx.HTTPStatusError):
                 "y que GEMINI_MODEL sea un modelo disponible.",
             )
         return _err(502, f"Gemini rechazó la solicitud (HTTP {status})")
+    if status in (401, 403):
+        return _err(
+            503,
+            "Supabase rechazó la autenticación. Verifica que SUPABASE_SECRET_KEY sea "
+            "una clave secreta vigente del mismo proyecto indicado en SUPABASE_URL.",
+        )
     if status == 409:
         return _err(409, "Supabase rechazó el cambio por una restricción de datos")
     try:
         payload = e.response.json()
     except ValueError:
         payload = {}
+    if (
+        payload.get("code") == "PGRST202"
+        and e.request.url.path.endswith("/rpc/actualizar_plan_completo")
+    ):
+        return _err(
+            503,
+            "Supabase aún no tiene habilitada la edición completa del itinerario. "
+            "Ejecuta backend/sql/007_edicion_completa_planes.sql en el SQL Editor "
+            "de Supabase y vuelve a intentar.",
+        )
+    if payload.get("code") == "42703":
+        return _err(
+            503,
+            "La base de datos no tiene el esquema requerido para editar planes. "
+            "Ejecuta backend/sql/007_edicion_completa_planes.sql en el SQL Editor "
+            "de Supabase y vuelve a intentar.",
+        )
+    if payload.get("code") == "P0001":
+        return _err(422, payload.get("message", "La base de datos rechazó los cambios del plan"))
     if payload.get("code") in {"PGRST202", "PGRST205"}:
         return _err(
             503,

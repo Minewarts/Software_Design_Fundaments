@@ -52,6 +52,7 @@ def _transporte(row: dict[str, Any]) -> Transporte:
         row["tipo_vehiculo"],
         Decimal(str(row["tarifa_estimada"])),
         _uuid(row["id"]),
+        tuple(_uuid(id_destino) for id_destino in row.get("ids_destinos", [])),
     )
 
 
@@ -60,7 +61,10 @@ class SupabaseRecursoRepository(RecursoRepository):
         self._db = client
 
     def guardar(self, recurso):
-        self._db.insert(_TABLA[type(recurso)], asdict(recurso))
+        datos = asdict(recurso)
+        if isinstance(recurso, Transporte):
+            datos.pop("ids_destinos", None)
+        self._db.insert(_TABLA[type(recurso)], datos)
         return recurso
 
     def buscar_destinos(self, id_destino: UUID | None = None):
@@ -106,6 +110,12 @@ class SupabaseRecursoRepository(RecursoRepository):
             select="id,tipo_vehiculo,tarifa_estimada",
             tarifa_estimada=f"lte.{tarifa_max}",
         )
+        links = self._db.select("destino_transporte", select="id_transporte,id_destino")
+        destinos_por_transporte: dict[str, list[str]] = {}
+        for link in links:
+            destinos_por_transporte.setdefault(link["id_transporte"], []).append(link["id_destino"])
+        for row in rows:
+            row["ids_destinos"] = destinos_por_transporte.get(row["id"], [])
         return [_transporte(row) for row in rows]
 
 

@@ -46,6 +46,7 @@ class Transporte:
     tipo_vehiculo: str
     tarifa_estimada: Decimal
     id: UUID = field(default_factory=uuid4)
+    ids_destinos: tuple[UUID, ...] = ()
 
     def __post_init__(self) -> None:
         if self.tarifa_estimada < 0:

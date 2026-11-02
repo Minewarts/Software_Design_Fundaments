@@ -34,6 +34,14 @@ En el panel de Supabase, abre **SQL Editor** y ejecuta, en este orden, los scrip
 4. `althea/althea/backend/sql/004_supabase_rest_api.sql`
 5. `althea/althea/backend/sql/005_remove_notifications.sql`
 6. Opcionalmente, `althea/althea/backend/sql/006_datos_ejemplo.sql` para insertar destinos y recursos de demostración.
+7. `althea/althea/backend/sql/007_edicion_completa_planes.sql`
+8. `althea/althea/backend/sql/008_conservar_recursos_existentes_plan.sql` para poder editar planes con recursos históricos que no corresponden al destino actual sin impedir cambios en sus otros campos.
+9. `althea/althea/backend/sql/009_duracion_dias_libres.sql` para conservar la duración del viaje aunque la IA deje días sin recursos programados.
+10. `althea/althea/backend/sql/010_edicion_multidestino.sql` para guardar el orden de destinos y poder añadir destinos al modificar un itinerario.
+
+En el generador de IA, selecciona los destinos en el orden de visita. El sistema
+filtra los recursos por esos destinos, valida los traslados al cambiar de ciudad
+y conserva los días libres sin crear actividades ficticias.
 
 La API usa `SUPABASE_URL` y `SUPABASE_SECRET_KEY` desde `althea/althea/backend/.env`. El archivo está excluido de Git. No pongas la clave secreta en variables `VITE_*` ni en el frontend. Si aún no tienes el archivo local, copia `.env.example` y completa los valores.
 

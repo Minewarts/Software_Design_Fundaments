@@ -37,6 +37,9 @@ class SupabasePlanRepository(PlanRepository):
                     "estado": plan.estado.value,
                     "costo_estimado": str(plan.costo_estimado),
                     "cantidad_viajeros": plan.cantidad_viajeros,
+                    "id_destino": str(plan.id_destino) if plan.id_destino else None,
+                    "duracion_dias": plan.duracion_dias,
+                    "id_destinos": [str(id_destino) for id_destino in plan.id_destinos],
                 },
                 "p_items": self._items_payload(plan),
             },
@@ -46,7 +49,7 @@ class SupabasePlanRepository(PlanRepository):
     def obtener_por_id(self, id_plan: UUID):
         rows = self._db.select(
             "plan_turistico",
-            select="id,titulo,estado,costo_estimado,cantidad_viajeros",
+            select="id,titulo,estado,costo_estimado,cantidad_viajeros,id_destino,duracion_dias",
             id=f"eq.{id_plan}",
             limit="1",
         )
@@ -60,6 +63,17 @@ class SupabasePlanRepository(PlanRepository):
             costo_estimado=Decimal(str(row["costo_estimado"])),
             cantidad_viajeros=int(row["cantidad_viajeros"]),
             id=UUID(row["id"]),
+            id_destino=UUID(row["id_destino"]) if row.get("id_destino") else None,
+            duracion_dias=int(row.get("duracion_dias") or 1),
+            id_destinos=tuple(
+                UUID(destination["id_destino"])
+                for destination in self._db.select(
+                    "plan_destino",
+                    select="id_destino",
+                    id_plan=f"eq.{row['id']}",
+                    order="orden.asc",
+                )
+            ),
         )
         items = self._db.select(
             "plan_items_detalle",
@@ -140,6 +154,29 @@ class SupabasePlanRepository(PlanRepository):
                 "p_id_plan": str(id_plan),
                 "p_id_item": str(id_item),
                 "p_numero_dia": numero_dia,
+            },
+        )
+
+    def actualizar_completo(
+        self, id_plan: UUID, titulo: str, cantidad_viajeros: int,
+        id_destinos: list[UUID], items: list[dict],
+    ) -> None:
+        self._db.rpc(
+            "actualizar_plan_completo",
+            {
+                "p_id_plan": str(id_plan),
+                "p_titulo": titulo,
+                "p_cantidad_viajeros": cantidad_viajeros,
+                "p_id_destinos": [str(id_destino) for id_destino in id_destinos],
+                "p_items": [
+                    {
+                        "id": str(item["id"]) if item.get("id") else None,
+                        "numero_dia": item["numero_dia"],
+                        "tipo_recurso": TipoRecurso(item["tipo_recurso"]).value,
+                        "id_recurso": str(item["id_recurso"]),
+                    }
+                    for item in items
+                ],
             },
         )
 

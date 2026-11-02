@@ -13,7 +13,11 @@ class Settings:
     supabase_secret_key: str = os.getenv("SUPABASE_SECRET_KEY", "")
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     gemini_model: str = os.getenv("GEMINI_MODEL", "").strip() or "gemini-3.5-flash"
-    cors_origins: tuple = tuple(os.getenv("CORS_ORIGINS", "http://localhost:5173").split(","))
+    cors_origins: tuple = tuple(
+        origin.strip()
+        for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+        if origin.strip()
+    )
 
 
 settings = Settings()

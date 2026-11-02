@@ -1,13 +1,20 @@
 <script setup>
 // Selector para agregar un recurso del catálogo a un día del itinerario.
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { recursos } from '../services/api'
 import SearchableSelect from './SearchableSelect.vue'
+const props = defineProps({ idDestinos: { type: Array, default: () => [] } })
 const emit = defineEmits(['agregar'])
 const ENDPOINT = { ALOJAMIENTO: 'alojamientos', ACTIVIDAD: 'actividades', TRANSPORTE: 'transportes' }
 const tipo = ref('ACTIVIDAD'), opciones = ref([]), id = ref(''), dia = ref(1)
 const error = ref('')
-const opcionesRecurso = () => opciones.value.map((o) => ({ value: o.id, label: o.nombre ?? o.tipo_vehiculo }))
+const opcionesFiltradas = computed(() => opciones.value.filter((opcion) => {
+  if (tipo.value === 'TRANSPORTE') {
+    return (opcion.ids_destinos ?? []).some((idDestino) => props.idDestinos.includes(idDestino))
+  }
+  return props.idDestinos.includes(opcion.id_destino)
+}))
+const opcionesRecurso = () => opcionesFiltradas.value.map((o) => ({ value: o.id, label: o.nombre ?? o.tipo_vehiculo }))
 async function cargar() {
   try {
     error.value = ''
@@ -20,6 +27,7 @@ async function cambiarTipo(value) {
   await cargar()
 }
 onMounted(cargar)
+watch(() => props.idDestinos, () => { id.value = '' }, { deep: true })
 </script>
 <template>
   <div class="row" style="margin:10px 0">

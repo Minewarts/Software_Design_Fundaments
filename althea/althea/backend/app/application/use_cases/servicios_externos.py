@@ -21,7 +21,9 @@ class ConsultarClimaHistorico:
         destinos = self._r.buscar_destinos(id_destino)
         if not destinos:
             raise DominioError("Destino no encontrado")
-        return self._c.actual(f"{destinos[0].nombre}, {destinos[0].ubicacion}")
+        ubicacion = (destinos[0].ubicacion or "").strip()
+        lugar = ubicacion or destinos[0].nombre
+        return self._c.actual(lugar)
 
     def actual_por_ubicacion(self, ubicacion: str) -> dict:
         if not ubicacion.strip():

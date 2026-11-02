@@ -11,6 +11,14 @@ main{padding:24px 28px;display:grid;gap:20px}
 .card{background:#fff;border-radius:16px;padding:22px;box-shadow:0 1px 3px #0b3c6f14}
 h2{margin:0 0 14px;font-size:20px}.mut{color:var(--mut);font-size:13px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.row label{display:grid;gap:4px;font-size:12px;color:var(--mut);font-weight:600}
+.form-grid{display:grid;gap:14px;align-items:end}
+.form-grid label{display:grid;gap:6px;min-width:0;color:var(--mut);font-size:12px;font-weight:600}
+.form-grid input,.form-grid .search-select{width:100%;min-width:0}
+.profile-form{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.profile-destinations{grid-column:1/-1}
+.profile-interests{grid-column:span 2}
+.profile-destinations small{font-weight:400;line-height:1.4}
+.profile-submit{grid-column:1/-1}
 input,select,textarea{padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#f8fafc}
 .search-select{position:relative;min-width:210px;color:var(--ink);font-size:14px;font-weight:400}
 .search-select input{width:100%;min-width:210px}
@@ -24,6 +32,17 @@ input,select,textarea{padding:10px 12px;border:1px solid var(--line);border-radi
 .search-select__option:hover,.search-select__option.selected{background:#e6f3fc;color:var(--navy)}
 .search-select__empty{margin:0;padding:9px;color:var(--mut);font-size:12px}
 .search-select__add{margin-top:4px;padding:8px;background:#eef2f7;color:var(--navy);font-size:12px}
+.toast-stack{position:fixed;top:18px;right:18px;z-index:1000;display:grid;gap:10px;width:min(390px,calc(100vw - 36px));pointer-events:none}
+.toast{display:flex;align-items:center;gap:11px;padding:13px 14px;border:1px solid #b9e5c9;border-radius:12px;background:#f0fbf4;color:#145c35;box-shadow:0 12px 30px #14213d24;font-size:14px;pointer-events:auto}
+.toast--error{border-color:#f1c1bd;background:#fff5f4;color:#8f2119}
+.toast__icon{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#d5f3df;font-weight:800}
+.toast--error .toast__icon{background:#fde1de}
+.toast__message{flex:1}
+.toast__close{padding:1px 5px;background:transparent;color:inherit;font-size:19px;line-height:1}
+.toast__close:hover{background:#0000000d}
+.toast-enter-active,.toast-leave-active,.toast-move{transition:opacity .2s ease,transform .2s ease}
+.toast-enter-from,.toast-leave-to{opacity:0;transform:translateX(18px)}
+.toast-leave-active{position:absolute;right:0}
 button,.btn{background:var(--navy);color:#fff;border:0;border-radius:10px;padding:10px 18px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
 button.sec{background:#eef2f7;color:var(--navy)}button.big{width:100%;margin-top:12px;padding:13px}
 table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:left;color:var(--mut);font-size:12px;padding:8px;background:#f8fafc}
@@ -35,3 +54,65 @@ td{padding:10px 8px;border-top:1px solid var(--line)}
 .item{border:1px solid var(--line);border-radius:12px;padding:12px}.item small{color:var(--sky);font-weight:700}
 .err{color:#b42318;font-size:13px}.star{background:none;color:#f5a623;padding:0 2px;font-size:20px}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}.stats div{background:#f8fafc;border-radius:12px;padding:12px}.stats b{font-size:22px;display:block}
+.manual-entry{display:grid;gap:18px;margin-top:18px;padding:18px;border:1px solid var(--line);border-radius:14px;background:#f8fafc}
+.manual-plan-fields{grid-template-columns:minmax(0,3fr) minmax(140px,1fr)}
+.manual-item-fields{grid-template-columns:minmax(150px,1fr) minmax(220px,1.5fr) minmax(90px,.55fr) auto;padding-top:16px;border-top:1px solid var(--line)}
+.manual-item-fields>button{min-height:40px}
+.resource-form{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:18px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#f8fafc}
+.resource-form>button{min-height:40px}
+.plan-card{position:relative}
+.card-close{position:absolute;top:14px;right:14px;display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--line);border-radius:50%;background:#f8fafc;color:var(--mut);font-size:20px;line-height:1;text-decoration:none;transition:background .15s ease,color .15s ease,border-color .15s ease}
+.card-close:hover{border-color:#c5d5e5;background:#eaf3fa;color:var(--navy)}
+.plan-card>h2{padding-right:34px}
+.itinerary-editor{margin:18px 0;padding:18px;border:1px solid var(--line);border-radius:14px;background:#f8fafc}
+.editor-fields{grid-template-columns:minmax(220px,2fr) minmax(120px,1fr) minmax(240px,2fr)}
+.itinerary-editor .editor-title{min-width:0}
+.editor-item{display:grid;align-content:start;gap:10px}
+.editor-item label{display:grid;gap:5px;color:var(--mut);font-size:12px;font-weight:600}
+.editor-item .search-select{width:100%;min-width:0}
+.editor-item .search-select input{width:100%;min-width:0}
+.editor-item input[type=number]{width:90px}
+.editor-item .err{margin:0}
+.notice{margin:8px 0;color:#16794a;font-size:13px}
+.weather-card{background:#fff;border:1px solid #dfeffc;box-shadow:0 12px 28px rgba(11,60,111,0.08)}
+.weather-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.weather-header h2{margin:6px 0 0;font-size:28px;line-height:1.2}
+.weather-kicker{color:#3e7fc5;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.weather-icon{display:grid;place-items:center;width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,#fff8c7,#dff7ff);font-size:36px;box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 10px 20px rgba(59,130,246,.12)}
+.weather-body{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.weather-temp{display:flex;align-items:flex-start;gap:4px;color:var(--navy)}
+.temp-number{font-size:52px;line-height:1;font-weight:800;letter-spacing:-.06em}
+.temp-unit{font-size:24px;font-weight:700;padding-top:8px}
+.weather-summary{display:grid;gap:4px}
+.weather-summary strong{font-size:20px;color:var(--ink)}
+.weather-summary span,.weather-summary small{color:var(--mut)}
+.weather-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px}
+.metric{background:rgba(255,255,255,.7);border:1px solid #dfe9f5;border-radius:14px;padding:12px 14px;display:grid;gap:4px}
+.metric span{font-size:12px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.metric strong{font-size:18px;color:var(--ink)}
+.forecast{margin-top:24px;padding-top:20px;border-top:1px solid #dfe9f5}
+.forecast-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.forecast-heading h3{margin:0;color:var(--ink);font-size:16px}
+.forecast-heading span{color:var(--mut);font-size:12px}
+.forecast-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.forecast-day{display:grid;justify-items:center;align-content:start;gap:8px;min-width:0;padding:12px 8px;border:1px solid #dfe9f5;border-radius:14px;background:rgba(255,255,255,.74);text-align:center}
+.forecast-date{font-size:12px;color:var(--navy);text-transform:capitalize}
+.forecast-icon{font-size:26px;line-height:1.2}
+.forecast-state{min-height:30px;color:var(--mut);font-size:11px;line-height:1.35}
+.forecast-temperatures{display:flex;gap:8px;font-size:15px}
+.forecast-temperatures span{color:#8290a3}
+.forecast-day small{color:#5182a8;font-size:11px}
+@media(max-width:900px){.forecast-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:560px){.forecast-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.toast-stack{top:10px;right:10px;width:calc(100vw - 20px)}}
+@media(max-width:900px){
+  .profile-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .manual-item-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .editor-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .editor-fields .editor-title{grid-column:1/-1}
+}
+@media(max-width:560px){
+  .profile-form,.manual-plan-fields,.manual-item-fields,.resource-form,.editor-fields{grid-template-columns:minmax(0,1fr)}
+  .profile-destinations,.profile-interests,.editor-fields .editor-title{grid-column:auto}
+  .manual-entry{padding:14px}
+}

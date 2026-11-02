@@ -17,14 +17,15 @@ class GestionarPlanes:
         plan = self._p.obtener_por_id(id_plan)
         if plan is None:
             raise PlanNoEncontradoError(str(id_plan))
-        if plan.estado is EstadoPlan.ARCHIVADO:
-            raise DominioError("El plan está archivado; restáuralo para editarlo")
         return plan
 
-    def crear_manual(self, titulo: str, viajeros: int, items: list[tuple[int, TipoRecurso, UUID]]) -> UUID:
+    def crear_manual(
+        self, titulo: str, viajeros: int, items: list[tuple[int, TipoRecurso, UUID]],
+        id_destino: UUID | None = None,
+    ) -> UUID:
         if not items:
             raise DominioError("Agrega al menos un recurso al plan")
-        plan = PlanTuristico(titulo=titulo, cantidad_viajeros=viajeros)
+        plan = PlanTuristico(titulo=titulo, cantidad_viajeros=viajeros, id_destino=id_destino)
         for dia, tipo, rid in items:
             plan.agregar_item(dia, rid, tipo)
         self._p.guardar(plan)
@@ -58,6 +59,16 @@ class GestionarPlanes:
         self._editable(id_plan)
         self._p.mover_item(id_plan, id_item, dia)
         self._p.recalcular_costo(id_plan)
+
+    def actualizar_completo(
+        self, id_plan: UUID, titulo: str, viajeros: int,
+        id_destinos: list[UUID], items: list[dict],
+    ) -> None:
+        self._editable(id_plan)
+        titulo = titulo.strip()
+        if not titulo:
+            raise DominioError("El título del plan es obligatorio")
+        self._p.actualizar_completo(id_plan, titulo, viajeros, id_destinos, items)
 
     def cambiar_estado(self, id_plan: UUID, estado: EstadoPlan) -> None:
         plan = self._p.obtener_por_id(id_plan)

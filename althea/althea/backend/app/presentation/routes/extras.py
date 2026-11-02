@@ -19,6 +19,16 @@ def clima_actual(id_destino: UUID):
     return D.clima.actual(id_destino)
 
 
+@router.get("/health")
+def health():
+    return {"status": "ok", "service": "althea-backend"}
+
+
+@router.get("/healthz")
+def healthz():
+    return health()
+
+
 @router.post("/traducir")
 def traducir(b: TraducirIn):
     return D.traducir.ejecutar(b.textos, b.idioma)

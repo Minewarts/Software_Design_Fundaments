@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from uuid import UUID
 
@@ -20,6 +20,7 @@ class CatalogoCandidato:
     alojamientos: list[Alojamiento]
     actividades: list[Actividad]
     transportes: list[Transporte]
+    destinos: list[Destino] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -40,5 +41,4 @@ class ServicioIA(ABC):
     def generar_itinerario(self, perfil: PerfilViaje,
                            catalogo: CatalogoCandidato) -> PropuestaIA:
         """Devuelve una propuesta referenciando IDs del catálogo recibido."""
-
 

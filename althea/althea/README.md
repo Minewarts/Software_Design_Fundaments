@@ -17,11 +17,20 @@ Desde el **SQL Editor** del proyecto, ejecuta en este orden:
 3. `backend/sql/003_release2.sql`
 4. `backend/sql/004_supabase_rest_api.sql`
 5. `backend/sql/005_remove_notifications.sql`
+6. Opcionalmente, `backend/sql/006_datos_ejemplo.sql` para poblar el catálogo.
+7. `backend/sql/007_edicion_completa_planes.sql` para guardar el destino del plan y habilitar la edición completa del itinerario.
+8. `backend/sql/008_conservar_recursos_existentes_plan.sql` para permitir conservar recursos históricos incompatibles mientras no cambie el destino del plan.
+9. `backend/sql/009_duracion_dias_libres.sql` para guardar la duración del viaje y mostrar los días que la IA dejó libres.
+10. `backend/sql/010_edicion_multidestino.sql` para persistir rutas de varios destinos y permitir modificarlas desde la ficha del itinerario.
 
-Para poblar el catálogo con destinos, alojamientos, actividades y transportes
-de demostración, ejecuta también `backend/sql/006_datos_ejemplo.sql`. Sus
-registros se pueden insertar más de una vez sin duplicar los mismos ejemplos;
-los precios son ilustrativos y están expresados en pesos colombianos.
+Los registros de demostración del script opcional `backend/sql/006_datos_ejemplo.sql`
+se pueden insertar más de una vez sin duplicar los mismos ejemplos; sus precios
+son ilustrativos y están expresados en pesos colombianos.
+
+Al generar con IA, selecciona los destinos en el orden de visita. El planificador
+solo recibe recursos vinculados a esos destinos y se rechazan rutas que retroceden
+o cambian de ciudad sin un transporte asociado a ambos destinos. Los días sin
+recursos se guardan como días libres, sin crear una actividad ficticia.
 
 ## Backend (FastAPI)
 En PowerShell, desde `althea/althea`:
