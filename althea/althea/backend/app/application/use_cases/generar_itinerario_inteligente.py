@@ -205,13 +205,19 @@ class GenerarItinerarioInteligente:
                 if posicion_nueva != posicion_anterior + 1:
                     raise PropuestaIAInvalidaError(
                         "La ruta debe visitar los destinos seleccionados en el orden indicado.")
-                if not any(
+                transporte_disponible = any(
+                    destino_actual in transporte.ids_destinos
+                    and id_destino in transporte.ids_destinos
+                    for transporte in cat.transportes
+                )
+                transporte_propuesto = any(
                     destino_actual in transporte.ids_destinos
                     and id_destino in transporte.ids_destinos
                     for transporte in transportes_desde_ultimo_destino
-                ):
+                )
+                if transporte_disponible and not transporte_propuesto:
                     raise PropuestaIAInvalidaError(
-                        "Cada cambio de destino debe incluir un transporte asociado al origen y al destino.")
+                        "Cada cambio de destino con transporte disponible debe incluirlo en la ruta.")
                 destino_actual = id_destino
                 visitados.append(id_destino)
                 dias_llegada[id_destino] = item.numero_dia

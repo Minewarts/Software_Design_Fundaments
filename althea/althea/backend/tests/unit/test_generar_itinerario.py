@@ -106,7 +106,39 @@ def test_accepts_ordered_multi_destination_trip_with_a_linked_transfer():
     assert plan.costo_estimado == Decimal("610000.00")
 
 
-def test_rejects_moving_to_another_destination_without_a_matching_transfer():
+def test_rejects_moving_without_using_an_available_matching_transfer():
+    second_id = uuid4()
+    hotel_second = Alojamiento(second_id, "Hotel Norte", 3, Decimal("120000"))
+    second_destination = Destino("Medellín", "Medellín, Colombia", "", second_id)
+    bus = Transporte("Bus intermunicipal", Decimal("50000"), ids_destinos=(DEST, second_id))
+
+    class MultiDestinationResources(FakeRecursos):
+        def buscar_destinos(self, id_destino):
+            return [DESTINO] if id_destino == DEST else [second_destination] if id_destino == second_id else []
+
+        def buscar_alojamientos(self, id_destino, *args):
+            return [HOTEL] if id_destino == DEST else [hotel_second] if id_destino == second_id else []
+
+        def buscar_actividades(self, *args): return []
+
+        def buscar_transportes(self, *args): return [bus]
+
+    perfil = PerfilViaje(
+        Decimal("5000000"), 4, 2, TipoViajero.FAMILIA, (),
+        DEST, (DEST, second_id),
+    )
+    propuesta = FakeIA([
+        ItemPropuesto(1, TipoRecurso.ALOJAMIENTO, HOTEL.id),
+        ItemPropuesto(2, TipoRecurso.ALOJAMIENTO, hotel_second.id),
+    ])
+
+    with pytest.raises(PropuestaIAInvalidaError, match="transporte disponible"):
+        GenerarItinerarioInteligente(
+            MultiDestinationResources(), FakePlanes(), propuesta,
+        ).ejecutar(perfil)
+
+
+def test_allows_user_managed_transfer_when_catalog_has_no_connection():
     second_id = uuid4()
     hotel_second = Alojamiento(second_id, "Hotel Norte", 3, Decimal("120000"))
     second_destination = Destino("Medellín", "Medellín, Colombia", "", second_id)
@@ -131,10 +163,14 @@ def test_rejects_moving_to_another_destination_without_a_matching_transfer():
         ItemPropuesto(2, TipoRecurso.ALOJAMIENTO, hotel_second.id),
     ])
 
-    with pytest.raises(PropuestaIAInvalidaError, match="transporte asociado"):
-        GenerarItinerarioInteligente(
-            MultiDestinationResources(), FakePlanes(), propuesta,
-        ).ejecutar(perfil)
+    plan = GenerarItinerarioInteligente(
+        MultiDestinationResources(), FakePlanes(), propuesta,
+    ).ejecutar(perfil)
+
+    assert plan.id_destinos == (DEST, second_id)
+    assert [item.tipo_recurso for item in plan.items] == [
+        TipoRecurso.ALOJAMIENTO, TipoRecurso.ALOJAMIENTO,
+    ]
 
 
 def test_rejects_activity_from_unselected_destination():

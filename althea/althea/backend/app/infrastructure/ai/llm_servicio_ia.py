@@ -11,21 +11,25 @@ from app.domain.entities.perfil_viaje import PerfilViaje
 from app.domain.exceptions.errores import PropuestaIAInvalidaError
 from app.infrastructure.ai.gemini_client import GeminiClient
 
-SYSTEM = """Eres un planificador de viajes. Construye un itinerario realista y cronológico usando exclusivamente el perfil, los destinos ordenados y los recursos del catálogo recibido.
-Devuelve solo JSON válido con esta forma exacta:
-{"titulo":"texto","items":[{"numero_dia":1,"tipo_recurso":"ALOJAMIENTO","id_recurso":"UUID"}]}
-tipo_recurso debe ser exactamente uno de: ALOJAMIENTO, ACTIVIDAD, TRANSPORTE.
+SYSTEM = """Eres un agente de viajes senior y diseñador de experiencias turísticas de lujo y aventura. Crea itinerarios lógicos, atractivos y equilibrados, desde escapadas cortas hasta circuitos de varios destinos.
+FORMATO DE SALIDA ESTRICTO:
+Responde únicamente con un objeto JSON válido, sin Markdown, saludos ni texto adicional. Usa exactamente esta estructura y estas claves:
+{"titulo_plan":"Nombre comercial del plan","descripcion_corta":"Breve descripción de la experiencia","costo_total_estimado":0,"itinerario":[{"dia":1,"destino_del_dia":"Nombre del destino","titulo_dia":"Título breve del día","recursos":[{"id_recurso":"UUID exacto del catálogo","tipo":"TRANSPORTE","nombre":"Nombre exacto del catálogo"}]}]}
+Cada día debe usar un número entre 1 y duracion_dias. Incluye los días libres con recursos vacío. tipo debe ser exactamente ALOJAMIENTO, ACTIVIDAD o TRANSPORTE. No agregues claves a ningún objeto.
 Reglas obligatorias:
-- Cada id_recurso debe existir en la lista correspondiente del catálogo. No inventes, sustituyas ni combines IDs.
-- Usa solo recursos asociados a los destinos seleccionados. Respeta su orden como ruta: no retrocedas ni saltes a un destino posterior sin un transporte que esté asociado tanto al destino de salida como al de llegada.
-- Los elementos del arreglo están en orden cronológico. Dentro de un día, ordena las actividades, el transporte y el alojamiento según ocurrirían. Para cambiar de ciudad en el mismo día, coloca el transporte entre los recursos de ambas ciudades.
-- No mezcles actividades de ciudades distintas sin un traslado entre ellas. No planifiques una actividad en una ciudad después de que el grupo ya haya salido de ella.
-- La duración define los días posibles (1 a duracion_dias), no una cuota de actividades. Puedes dejar cualquier día sin elementos si un día libre o de traslado sin actividad es lo más razonable; representa ese día con cero items. No inventes una actividad llamada «Libre».
-- Incluye alojamiento el día de llegada en cada destino donde el grupo pernocte; no fuerces alojamiento en una ciudad visitada solo de paso ni en un viaje de un día. Evita asignar más de un check-in de alojamiento en un día.
-- Usa transporte únicamente si corresponde a la ruta. No añadas actividades, alojamientos ni transportes por completar una cuota diaria.
-- Mantén un ritmo razonable para el tipo de viajero e intereses, evita repetir actividades y prioriza recursos asequibles. No afirmes horarios, duraciones ni servicios que no estén en el catálogo.
-- Si no hay recursos adecuados para una parte del viaje, deja el día sin elementos en lugar de inventar recursos.
-- No añadas claves, comentarios ni texto fuera del JSON."""
+- Cada id_recurso debe existir en la lista correspondiente de [CATÁLOGO DE RECURSOS]. No inventes ni sustituyas recursos.
+- Usa exclusivamente los destinos y recursos seleccionados. Respeta destinos_en_orden y crea una ruta secuencial; nunca retrocedas ni saltes destinos.
+- Al cambiar de destino, incluye un TRANSPORTE enlazado tanto al origen como al destino cuando exista en el catálogo. Si no existe esa conexión, no inventes un transporte: asume que el viajero gestiona ese traslado por su cuenta y continúa con el siguiente destino.
+- Los elementos de items deben estar en orden cronológico. Ordena el alojamiento, las actividades y los traslados según ocurrirían. No incluyas actividades de una ciudad después de salir de ella.
+- Programa como máximo 3 actividades por día. En un día de cambio de destino, reduce las actividades y prioriza el traslado y el check-in.
+- En viajes de más de 7 días, intercala días ligeros de descanso o tiempo libre. La duración define los días posibles (1 a duracion_dias), no una cuota de actividades. Un día libre puede tener cero actividades; no inventes un recurso llamado «Libre».
+- Incluye alojamiento el día de llegada en cada destino donde se pernocte. No fuerces alojamiento en una ciudad visitada solo de paso ni en un viaje de un día. Evita más de un check-in por día.
+- La suma de alojamientos, actividades y transportes no debe superar el presupuesto máximo indicado. Calcula alojamiento por noche y habitación, actividades por persona y transporte por tarifa estimada. Prioriza opciones asequibles.
+- costo_total_estimado debe ser un número, pero es solo informativo: el sistema recalcula el costo con los precios del catálogo y no confía en el costo generado por la IA.
+- En cada recurso, tipo e id_recurso deben corresponder al mismo elemento del catálogo y nombre debe copiarse exactamente. No uses el texto del nombre como identificador.
+- Mantén un ritmo adecuado al tipo de viajero y sus intereses, evita repetir actividades y no afirmes horarios, duraciones ni servicios que no estén en el catálogo.
+- Si faltan recursos adecuados, deja el día sin elementos en vez de inventar recursos. Si no hay enlace de transporte entre dos destinos, el traslado queda a cargo del viajero como se indicó arriba.
+- El itinerario y los recursos son la fuente de verdad; destino_del_dia y titulo_dia son etiquetas descriptivas. No añadas claves, comentarios ni texto fuera del JSON."""
 
 
 class LLMServicioIA(ServicioIA):
@@ -34,7 +38,8 @@ class LLMServicioIA(ServicioIA):
 
     def generar_itinerario(self, perfil: PerfilViaje, cat: CatalogoCandidato) -> PropuestaIA:
         entrada = {
-            "perfil": {"duracion_dias": perfil.duracion_dias, "viajeros": perfil.cantidad_viajeros,
+            "perfil": {"presupuesto_max": float(perfil.presupuesto_max), "moneda": "COP",
+                       "duracion_dias": perfil.duracion_dias, "viajeros": perfil.cantidad_viajeros,
                        "tipo_viajero": perfil.tipo_viajero.value, "intereses": list(perfil.intereses)},
             "destinos_en_orden": [
                 {"id": str(destino.id), "nombre": destino.nombre, "ubicacion": destino.ubicacion}
@@ -52,9 +57,46 @@ class LLMServicioIA(ServicioIA):
                                  "tarifa": float(t.tarifa_estimada)} for t in cat.transportes]}}
         data = self._c.json(SYSTEM, json.dumps(entrada, ensure_ascii=False))
         try:
-            items = [ItemPropuesto(int(i["numero_dia"]), TipoRecurso(i["tipo_recurso"]), UUID(i["id_recurso"]))
-                     for i in data["items"]]
-            return PropuestaIA(str(data["titulo"]), items)
+            if not isinstance(data, dict) or set(data) != {
+                "titulo_plan", "descripcion_corta", "costo_total_estimado", "itinerario",
+            }:
+                raise ValueError("la respuesta no coincide con la estructura JSON requerida")
+            if not isinstance(data["titulo_plan"], str) or not isinstance(data["descripcion_corta"], str):
+                raise TypeError("titulo_plan y descripcion_corta deben ser texto")
+            if (
+                isinstance(data["costo_total_estimado"], bool)
+                or not isinstance(data["costo_total_estimado"], (int, float))
+            ):
+                raise TypeError("costo_total_estimado debe ser numérico")
+            dias = data["itinerario"]
+            if not isinstance(dias, list):
+                raise TypeError("itinerario debe ser una lista")
+            items = []
+            for dia in dias:
+                if not isinstance(dia, dict) or set(dia) != {
+                    "dia", "destino_del_dia", "titulo_dia", "recursos",
+                }:
+                    raise ValueError("cada día debe tener exactamente las claves solicitadas")
+                if (
+                    type(dia["dia"]) is not int
+                    or not isinstance(dia["destino_del_dia"], str)
+                    or not isinstance(dia["titulo_dia"], str)
+                    or not isinstance(dia["recursos"], list)
+                ):
+                    raise TypeError("los datos del día tienen un tipo inválido")
+                for recurso in dia["recursos"]:
+                    if not isinstance(recurso, dict) or set(recurso) != {
+                        "id_recurso", "tipo", "nombre",
+                    }:
+                        raise ValueError("cada recurso debe tener exactamente las claves solicitadas")
+                    if not isinstance(recurso["nombre"], str):
+                        raise TypeError("el nombre del recurso debe ser texto")
+                    items.append(ItemPropuesto(
+                        dia["dia"],
+                        TipoRecurso(recurso["tipo"]),
+                        UUID(recurso["id_recurso"]),
+                    ))
+            return PropuestaIA(str(data["titulo_plan"]), items)
         except (KeyError, ValueError, TypeError) as e:
             raise PropuestaIAInvalidaError(f"Propuesta de IA mal formada: {e}") from e
 

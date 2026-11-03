@@ -48,6 +48,12 @@ async def _external_service_error(_: Request, e: httpx.HTTPStatusError):
                 "Gemini no encontró el modelo configurado. Verifica GEMINI_MODEL "
                 "en backend/.env.",
             )
+        if status == 503:
+            return _err(
+                503,
+                "Gemini no está disponible temporalmente después de varios intentos. "
+                "Espera un momento y vuelve a generar el itinerario.",
+            )
         if status == 400:
             return _err(
                 502,
@@ -77,6 +83,16 @@ async def _external_service_error(_: Request, e: httpx.HTTPStatusError):
             "Ejecuta backend/sql/007_edicion_completa_planes.sql en el SQL Editor "
             "de Supabase y vuelve a intentar.",
         )
+    if (
+        payload.get("code") == "PGRST202"
+        and e.request.url.path.endswith("/rpc/crear_plan_con_items")
+    ):
+        return _err(
+            503,
+            "Supabase aún no tiene habilitada la creación de planes multidestino. "
+            "Ejecuta backend/sql/010_edicion_multidestino.sql en el SQL Editor "
+            "de Supabase y vuelve a intentar.",
+        )
     if payload.get("code") == "42703":
         return _err(
             503,
@@ -96,4 +112,32 @@ async def _external_service_error(_: Request, e: httpx.HTTPStatusError):
 
 
 @app.exception_handler(httpx.HTTPError)
-async def _502(_: Request, e): return _err(502, "No se pudo conectar con Supabase o con otro servicio externo")
+async def _502(_: Request, e: httpx.HTTPError):
+    external_request = getattr(e, "request", None)
+    host = external_request.url.host if external_request else None
+    service = {
+        "generativelanguage.googleapis.com": "Gemini",
+    }.get(host)
+    if host and host.endswith(".supabase.co"):
+        service = "Supabase"
+
+    if isinstance(e, httpx.TimeoutException):
+        if service:
+            return _err(
+                504,
+                f"La conexión con {service} agotó el tiempo de espera. "
+                "Verifica el servicio y vuelve a intentar.",
+            )
+        return _err(504, "La conexión con un servicio externo agotó el tiempo de espera.")
+
+    if service:
+        return _err(
+            502,
+            f"No se pudo establecer conexión con {service}. "
+            "Verifica la conexión a internet y la disponibilidad del servicio.",
+        )
+    return _err(
+        502,
+        f"No se pudo establecer conexión con un servicio externo ({type(e).__name__}). "
+        "Revisa el log del backend para identificar el servicio.",
+    )

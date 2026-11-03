@@ -4,7 +4,24 @@ import json
 import httpx
 from starlette.requests import Request
 
-from app.main import _external_service_error
+from app.main import _502, _external_service_error
+
+
+def invoke_transport_error(error: httpx.HTTPError):
+    scope = {
+        "type": "http",
+        "asgi": {"version": "3.0"},
+        "http_version": "1.1",
+        "method": "POST",
+        "scheme": "http",
+        "path": "/api/planes/generar",
+        "raw_path": b"/api/planes/generar",
+        "query_string": b"",
+        "headers": [],
+        "client": ("test", 123),
+        "server": ("test", 80),
+    }
+    return asyncio.run(_502(Request(scope), error))
 
 
 def invoke_error_handler(url: str, status: int, payload=None):
@@ -37,6 +54,39 @@ def test_gemini_auth_error_is_not_reported_as_supabase_failure():
     assert "GEMINI_API_KEY" in json.loads(response.body)["detail"]
 
 
+def test_gemini_unavailable_error_explains_retry():
+    response = invoke_error_handler(
+        "https://generativelanguage.googleapis.com/v1beta/models/model:generateContent",
+        503,
+    )
+
+    assert response.status_code == 503
+    assert "temporalmente" in json.loads(response.body)["detail"]
+
+
+def test_gemini_connection_error_names_the_unreachable_service():
+    request = httpx.Request(
+        "POST",
+        "https://generativelanguage.googleapis.com/v1beta/models/model:generateContent",
+    )
+    response = invoke_transport_error(httpx.ConnectError("connection failed", request=request))
+
+    assert response.status_code == 502
+    detail = json.loads(response.body)["detail"]
+    assert "Gemini" in detail
+    assert "conexión a internet" in detail
+
+
+def test_supabase_timeout_names_the_service_and_timeout():
+    request = httpx.Request("GET", "https://project.supabase.co/rest/v1/destino")
+    response = invoke_transport_error(httpx.ReadTimeout("timed out", request=request))
+
+    assert response.status_code == 504
+    detail = json.loads(response.body)["detail"]
+    assert "Supabase" in detail
+    assert "tiempo de espera" in detail
+
+
 def test_supabase_auth_error_keeps_supabase_context():
     response = invoke_error_handler("https://project.supabase.co/rest/v1/destino", 401)
 
@@ -56,6 +106,17 @@ def test_missing_full_plan_update_rpc_explains_required_migration():
 
     assert response.status_code == 503
     assert "007_edicion_completa_planes.sql" in json.loads(response.body)["detail"]
+
+
+def test_missing_multidestination_create_rpc_explains_required_migration():
+    response = invoke_error_handler(
+        "https://project.supabase.co/rest/v1/rpc/crear_plan_con_items",
+        404,
+        {"code": "PGRST202"},
+    )
+
+    assert response.status_code == 503
+    assert "010_edicion_multidestino.sql" in json.loads(response.body)["detail"]
 
 
 def test_missing_plan_destination_column_explains_required_migration():
